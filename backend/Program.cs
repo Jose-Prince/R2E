@@ -1,7 +1,14 @@
+using DotNetEnv;
+
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
+Env.Load();
+
 app.MapGet("/", () => "Hello World!");
+
+// Create a new client and connect to the server
+var mongoClient = MongoDBConnection.Initialize(Env.GetString("MONGODB_URI"));
 
 //ENDPOINTS:
 //CREATE:
