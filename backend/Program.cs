@@ -1,19 +1,50 @@
 using DotNetEnv;
+using MongoDB.Bson;
+using MongoDB.Driver;
+
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
 Env.Load();
 
-app.MapGet("/", () => "Hello World!");
-
 // Create a new client and connect to the server
 var mongoClient = MongoDBConnection.Initialize(Env.GetString("MONGODB_URI"));
+
+//Get database
+var db = mongoClient.GetDatabase("R2E");
+
+app.MapGet("/", () => "Hello World!");
+
 
 //ENDPOINTS:
 //CREATE:
 //- Crear un pedido
+app.MapPost("/orders", async (Order newOrder) =>
+{
+    var ordersCollection = db.GetCollection<Order>("orders");
+    await ordersCollection.InsertOneAsync(newOrder);
+    return Results.Created($"/orders/{newOrder.Id}", newOrder);
+});
+
 //- Crear reseña asociada 
+app.MapPost("/restaurants/{restaurantId}/reviews", async (string restaurantId, Review newReview) =>
+{
+    var restaurantsCollection = db.GetCollection<Restaurant>("restaurants");
+    // Generar nuevo Id para la reseña
+    newReview.Id = ObjectId.GenerateNewId();
+    // Filtro por restaurante
+    var filter = Builders<Restaurant>.Filter.Eq(r => r.Id, ObjectId.Parse(restaurantId));
+    // Agregar la reseña al arreglo
+    var update = Builders<Restaurant>.Update.Push(r => r.Reviews, newReview);
+    var result = await restaurantsCollection.UpdateOneAsync(filter, update);
+    
+    if (result.ModifiedCount == 0)
+        return Results.NotFound($"Restaurante con id {restaurantId} no encontrado.");
+
+    return Results.Created($"/restaurants/{restaurantId}/reviews/{newReview.Id}", newReview);
+});
+
 //READ:
 //- Obtener restaurantes (Nombre, Foto referencia, Calificación, size, page)
 //- Obtener los diferentes tipos de comida de los restaurantes (sin repeticiones)
