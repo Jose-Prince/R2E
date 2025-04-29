@@ -1,0 +1,42 @@
+---
+import astroLogo from '../assets/astro.svg';
+import cartLogo from '../assets/shopCart.svg';
+import menuLogo from '../assets/menu.svg';
+import '../styles/global.css';
+---
+
+<div class="header-class">
+    <button class="btn btn-ghost btn-square">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 6H20M4 12H20M4 18H20" stroke="#FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>    
+    </button>
+    <label class="input search">
+        <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <g
+              stroke-linejoin="round"
+              stroke-linecap="round"
+              stroke-width="2.5"
+              fill="none"
+              stroke="currentColor"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.3-4.3"></path>
+            </g>
+        </svg>
+        <input type="search" required placeholder="Search" />
+    </label>
+    <button class="btn btn-ghost btn-square">
+        <svg width="30" height="30" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            ␍<defs>
+                ␍<style>.cls-1{fill:none;stroke:#FFF;stroke-miterlimit:10;stroke-width:1.91px;}</style>
+            ␍</defs>
+            ␍<g id="cart">
+                ␍<circle class="cls-1" cx="10.07" cy="20.59" r="1.91"/>
+                ␍<circle class="cls-1" cx="18.66" cy="20.59" r="1.91"/>
+                ␍<path class="cls-1" d="M.52,1.5H3.18a2.87,2.87,0,0,1,2.74,2L9.11,13.91H8.64A2.39,2.39,0,0,0,6.25,16.3h0a2.39,2.39,0,0,0,2.39,2.38h10"/>
+                ␍<polyline class="cls-1" points="7.21 5.32 22.48 5.32 22.48 7.23 20.57 13.91 9.11 13.91"/>
+            ␍</g>
+        ␍</svg>
+    </button>
+</div>
