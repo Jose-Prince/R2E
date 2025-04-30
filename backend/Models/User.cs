@@ -1,19 +1,21 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-public class User {
-  [BsonId]
-  public ObjectId Id { get; set; }
+[BsonIgnoreExtraElements]
+public class User
+{
+    [BsonId]
+    public ObjectId Id { get; set; }
 
-  [BsonElement("fullName")]
-  public string FullName { get; set; }
+    [BsonElement("Nombre_y_Apellido")]
+    public string NombreYApellido { get; set; }
 
-  [BsonElement("email")]
-  public string Email { get; set; }
+    [BsonElement("Correo")]
+    public string Correo { get; set; }
 
-  [BsonElement("deliveryAddresses")]
-  public List<string> DeliveryAddresses { get; set; }
+    [BsonElement("Dirección_entrega")]
+    public List<string> DireccionesEntrega { get; set; }
 
-  [BsonElement("card")]
-  public Card Card { get; set; }
+    [BsonElement("Tarjeta")]
+    public Card Tarjeta { get; set; }
 }

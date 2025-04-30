@@ -66,6 +66,21 @@ app.MapGet("/restaurants",async () =>
     return Results.Ok(restaurants);
 });
 
+//- Obtener todos los usuarios
+app.MapGet("/users", async () =>
+{
+    var users = await usersCollection.Find(_ => true).ToListAsync();
+    return Results.Ok(users);
+});
+
+//- Obtener todas las ordenes
+app.MapGet("/orders", async () =>
+{
+    var orders = await ordersCollection.Find(_ => true).ToListAsync();
+    return Results.Ok(orders);
+});
+
+
 //- Obtener restaurantes (Nombre, Foto referencia, Calificación, size, page)
 //- Obtener los diferentes tipos de comida de los restaurantes (sin repeticiones)
 //- Obtener ofertas (Nombre del artículo, Precio total, precio base, nomnre de restaurante, descuento, Foto de artículo, size, page)
@@ -84,7 +99,7 @@ app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestau
 
     if (updatedRestaurant.Name != null)
         updates.Add(Builders<Restaurant>.Update.Set(r => r.Name, updatedRestaurant.Name));
-    if (updatedRestaurant.AverageRating != 0) // Cambiar si puede ser 0 válido
+    if (updatedRestaurant.AverageRating != 0)
         updates.Add(Builders<Restaurant>.Update.Set(r => r.AverageRating, updatedRestaurant.AverageRating));
     if (updatedRestaurant.Location != null)
         updates.Add(Builders<Restaurant>.Update.Set(r => r.Location, updatedRestaurant.Location));
@@ -109,9 +124,9 @@ app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestau
     var result = await restaurantsCollection.UpdateOneAsync(filter, updateDef);
 
     if (result.MatchedCount == 0)
-        return Results.NotFound($"
+        return Results.NotFound($"Restaurant: {name} not found.");
 
-    return Results.Ok($"Restaurant: {name}, updated");
+    return Results.Ok($"Restaurant: {name}, updated.");
 });
 
 //- Añadir tarjeta a un usuario
@@ -131,7 +146,31 @@ app.MapDelete("restaurants/{name}", async (string name) =>
     return Results.Ok($"Restaurant: '{name}' deleted");
 });
 
-//- Quitar trajeta
+//- Quitar tarjeta
+app.MapDelete("user/{userId}/card", async (string userId) =>
+{
+    var filter = Builders<User>.Filter.Eq("_id", userId);
+    var update = Builders<User>.Update.Unset("Tarjeta");
+
+    var result = await usersCollection.UpdateOneAsync(filter, update);
+
+    if (result.ModifiedCount == 0)
+        return Results.NotFound($"User with id {userId} not found or did not have a card.");
+    
+    return Results.Ok($"Card deleted for user {userId}.");
+});
+
 //- Eliminar una orden
-//
+app.MapDelete("/orders/{orderId}", async (string orderId) =>
+{
+    var filter = Builders<Order>.Filter.Eq("_id", orderId);
+
+    var result = await ordersCollection.DeleteOneAsync(filter);
+
+    if (result.DeletedCount == 0)
+        return Results.NotFound($"Order with id {orderId} not found.");
+
+    return Results.Ok($"Order {orderId} successfully deleted.");
+});
+
 app.Run();
