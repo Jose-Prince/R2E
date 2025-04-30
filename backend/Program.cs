@@ -75,6 +75,45 @@ app.MapGet("/restaurants",async () =>
 //- Obtener ordenes para un cliente en estado entregado (no se obtiene: Cliente)
 //- Obtener los datos del cliente
 //UPDATE:
+//- Actualizar restaurante
+app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestaurant) => 
+{
+    var filter = Builders<Restaurant>.Filter.Eq(r => r.Name, name);
+
+    var updates = new List<UpdateDefinition<Restaurant>>();
+
+    if (updatedRestaurant.Name != null)
+        updates.Add(Builders<Restaurant>.Update.Set(r => r.Name, updatedRestaurant.Name));
+    if (updatedRestaurant.AverageRating != 0) // Cambiar si puede ser 0 válido
+        updates.Add(Builders<Restaurant>.Update.Set(r => r.AverageRating, updatedRestaurant.AverageRating));
+    if (updatedRestaurant.Location != null)
+        updates.Add(Builders<Restaurant>.Update.Set(r => r.Location, updatedRestaurant.Location));
+    if (updatedRestaurant.OpeningTime != null)
+        updates.Add(Builders<Restaurant>.Update.Set(r => r.OpeningTime, updatedRestaurant.OpeningTime));
+    if (updatedRestaurant.ClosingTime != null)
+        updates.Add(Builders<Restaurant>.Update.Set(r => r.ClosingTime, updatedRestaurant.ClosingTime));
+    if (updatedRestaurant.Styles != null)
+        updates.Add(Builders<Restaurant>.Update.Set(r => r.Styles, updatedRestaurant.Styles));
+    if (updatedRestaurant.PhotoLocationId != null)
+        updates.Add(Builders<Restaurant>.Update.Set(r => r.PhotoLocationId, updatedRestaurant.PhotoLocationId));
+    if (updatedRestaurant.PhotoReferenceId != null)
+        updates.Add(Builders<Restaurant>.Update.Set(r => r.PhotoReferenceId, updatedRestaurant.PhotoReferenceId));
+    if (updatedRestaurant.Ubication?.Coordinates != null && updatedRestaurant.Ubication.Coordinates.Length == 2)
+        updates.Add(Builders<Restaurant>.Update.Set(r => r.Ubication, updatedRestaurant.Ubication));
+
+    if (!updates.Any())
+        return Results.BadRequest("No hay campos válidos para actualizar.");
+
+    var updateDef = Builders<Restaurant>.Update.Combine(updates);
+
+    var result = await restaurantsCollection.UpdateOneAsync(filter, updateDef);
+
+    if (result.MatchedCount == 0)
+        return Results.NotFound($"Restaurante con id {name} no encontrado.");
+
+    return Results.Ok($"Restaurante con id {name} actualizado correctamente.");
+});
+
 //- Añadir tarjeta a un usuario
 //- Añadir artículo a carrito (actualizar el total a pagar)
 //- Cambiar estado de la orden
