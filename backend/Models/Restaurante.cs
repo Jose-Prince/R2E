@@ -33,5 +33,13 @@ public class Restaurant {
     public List<Review> Reviews {get; set;}
 
     [BsonElement("ubicacion")]
-    public Object Ubication {get; set;}
+    public GeoJsonPoint Ubication {get; set;}
+}
+
+public class GeoJsonPoint {
+    [BsonElement("type")]
+    public string Type { get; set; } = "Point";
+
+    [BsonElement("coordinates")]
+    public double[] Coordinates { get; set; } = new double[2];
 }
