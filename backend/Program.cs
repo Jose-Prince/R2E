@@ -127,7 +127,11 @@ app.MapGet("/restaurants/nombre/{nombre}", async (string nombre) =>
     return Results.Ok(dict);
 });
 
-//- Obtener los elementos del carrito de ordenes que esten en estado "no ordenado"
+// Obtener productos del carrito de órdenes no ordenadas (Estado = 0)
+// no pude
+
+
+
 //- Obtener ordenes para un cliente en estado ordenado y en camino (no se obtiene: Cliente)
 //- Obtener ordenes para un cliente en estado entregado (no se obtiene: Cliente)
 //- Obtener los datos del cliente
