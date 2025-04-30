@@ -9,8 +9,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding-left: 22vw; 
 }
 
 .search {
     width: 70%;
+}
+
+.content-style {
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+.sidebar-style {
+    background-color: #111;
+    padding: 1vw;
 }

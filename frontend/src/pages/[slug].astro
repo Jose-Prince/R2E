@@ -1,0 +1,20 @@
+---
+// src/pages/[slug].astro
+const { slug } = Astro.params;
+
+let Page;
+
+if (slug === 'shopping') {
+
+} else if (slug === 'profile') {
+
+} else if (slug == 'restaurants') {
+
+} else if (slug == 'sales') {
+
+} else if (slug == 'orders') {
+
+} 
+---
+
+<Page client:load />
