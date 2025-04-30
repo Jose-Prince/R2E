@@ -66,11 +66,72 @@ app.MapGet("/restaurants",async () =>
     return Results.Ok(restaurants);
 });
 
+//- Obtener todos los usuarios
+app.MapGet("/users", async () =>
+{
+    var users = await usersCollection.Find(_ => true).ToListAsync();
+    return Results.Ok(users);
+});
+
+//- Obtener todas las ordenes
+app.MapGet("/orders", async () =>
+{
+    var orders = await ordersCollection.Find(_ => true).ToListAsync();
+    return Results.Ok(orders);
+});
+
+
 //- Obtener restaurantes (Nombre, Foto referencia, Calificación, size, page)
-//- Obtener los diferentes tipos de comida de los restaurantes (sin repeticiones)
+// Obtener los diferentes tipos de comida sin repeticiones
+app.MapGet("/restaurants/estilos", async () =>
+{
+    var pipeline = new[]
+    {
+        new BsonDocument("$unwind", "$Estilo"),
+        new BsonDocument("$group", new BsonDocument("_id", "$Estilo")),
+        new BsonDocument("$sort", new BsonDocument("_id", 1))
+    };
+
+    var result = await restaurantsCollection.AggregateAsync<BsonDocument>(pipeline);
+
+    var estilos = await result.ToListAsync();
+
+    var lista = estilos.Select(e => e["_id"].AsString).ToList();
+
+    return Results.Ok(lista);
+});
+
 //- Obtener ofertas (Nombre del artículo, Precio total, precio base, nomnre de restaurante, descuento, Foto de artículo, size, page)
-//- Obtener restaurante por nombre (Nombre, Foto referencia, Calificación)
-//- Obtener los elementos del carrito de ordenes que esten en estado "no ordenado"
+
+// Obtener restaurante por nombre (Nombre, Foto_referencia, Calificación)
+app.MapGet("/restaurants/nombre/{nombre}", async (string nombre) =>
+{
+    var filter = Builders<Restaurant>.Filter.Eq("Nombre", nombre);
+
+    var projection = Builders<Restaurant>.Projection
+        .Include("Nombre")
+        .Include("Foto_referencia")
+        .Include("Calificación")
+        .Exclude("_id");
+
+    var bson = await restaurantsCollection
+        .Find(filter)
+        .Project<BsonDocument>(projection)
+        .FirstOrDefaultAsync();
+
+    if (bson == null)
+        return Results.NotFound($"No se encontró restaurante con nombre: {nombre}");
+
+    var dict = bson.ToDictionary();
+
+    return Results.Ok(dict);
+});
+
+// Obtener productos del carrito de órdenes no ordenadas (Estado = 0)
+// no pude
+
+
+
 //- Obtener ordenes para un cliente en estado ordenado y en camino (no se obtiene: Cliente)
 //- Obtener ordenes para un cliente en estado entregado (no se obtiene: Cliente)
 //- Obtener los datos del cliente
@@ -84,7 +145,7 @@ app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestau
 
     if (updatedRestaurant.Name != null)
         updates.Add(Builders<Restaurant>.Update.Set(r => r.Name, updatedRestaurant.Name));
-    if (updatedRestaurant.AverageRating != 0) // Cambiar si puede ser 0 válido
+    if (updatedRestaurant.AverageRating != 0)
         updates.Add(Builders<Restaurant>.Update.Set(r => r.AverageRating, updatedRestaurant.AverageRating));
     if (updatedRestaurant.Location != null)
         updates.Add(Builders<Restaurant>.Update.Set(r => r.Location, updatedRestaurant.Location));
@@ -109,14 +170,44 @@ app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestau
     var result = await restaurantsCollection.UpdateOneAsync(filter, updateDef);
 
     if (result.MatchedCount == 0)
-        return Results.NotFound($"
+        return Results.NotFound($"Restaurant: {name} not found.");
 
-    return Results.Ok($"Restaurant: {name}, updated");
+    return Results.Ok($"Restaurant: {name}, updated.");
 });
 
 //- Añadir tarjeta a un usuario
+// Añadir o actualizar tarjeta de un usuario
+app.MapPatch("/user/{userId}/card", async (string userId, Card nuevaTarjeta) =>
+{
+    var filter = Builders<User>.Filter.Eq("_id", userId);
+    var update = Builders<User>.Update.Set("Tarjeta", nuevaTarjeta);
+
+    var result = await usersCollection.UpdateOneAsync(filter, update);
+
+    if (result.MatchedCount == 0)
+        return Results.NotFound($"User with id {userId} not found.");
+
+    return Results.Ok($"Card updated for user {userId}.");
+});
+
 //- Añadir artículo a carrito (actualizar el total a pagar)
-//- Cambiar estado de la orden
+
+
+// Cambiar estado de una orden
+app.MapPatch("/orders/{orderId}/status", async (string orderId, EstadoWrapper body) =>
+{
+    var filter = Builders<Order>.Filter.Eq("_id", orderId);
+    var update = Builders<Order>.Update.Set("Estado", body.Estado);
+
+    var result = await ordersCollection.UpdateOneAsync(filter, update);
+
+    if (result.MatchedCount == 0)
+        return Results.NotFound($"Order with id {orderId} not found.");
+
+    return Results.Ok($"Estado de la orden {orderId} actualizado a {body.Estado}.");
+});
+
+
 //DELETE:
 //- Borrar restaurante
 app.MapDelete("restaurants/{name}", async (string name) => 
@@ -131,7 +222,31 @@ app.MapDelete("restaurants/{name}", async (string name) =>
     return Results.Ok($"Restaurant: '{name}' deleted");
 });
 
-//- Quitar trajeta
+//- Quitar tarjeta
+app.MapDelete("user/{userId}/card", async (string userId) =>
+{
+    var filter = Builders<User>.Filter.Eq("_id", userId);
+    var update = Builders<User>.Update.Unset("Tarjeta");
+
+    var result = await usersCollection.UpdateOneAsync(filter, update);
+
+    if (result.ModifiedCount == 0)
+        return Results.NotFound($"User with id {userId} not found or did not have a card.");
+    
+    return Results.Ok($"Card deleted for user {userId}.");
+});
+
 //- Eliminar una orden
-//
+app.MapDelete("/orders/{orderId}", async (string orderId) =>
+{
+    var filter = Builders<Order>.Filter.Eq("_id", orderId);
+
+    var result = await ordersCollection.DeleteOneAsync(filter);
+
+    if (result.DeletedCount == 0)
+        return Results.NotFound($"Order with id {orderId} not found.");
+
+    return Results.Ok($"Order {orderId} successfully deleted.");
+});
+
 app.Run();

@@ -1,13 +1,13 @@
-using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-public class Card {
-    [BsonElement("number")]
-    public string Number {get; set;}
+public class Card
+{
+    [BsonElement("Cvv")]
+    public int Cvv { get; set; }
 
-    [BsonElement("cvv")]
-    public int Cvv {get; set;}
+    [BsonElement("Numeracion")]
+    public long Numeracion { get; set; }
 
-    [BsonElement("expiration")]
-    public DateTime Expiration {get; set;}
+    [BsonElement("Expiración")]
+    public DateTime Expiracion { get; set; }
 }
