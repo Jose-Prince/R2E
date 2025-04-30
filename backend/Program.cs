@@ -83,6 +83,25 @@ app.MapGet("/orders", async () =>
 
 //- Obtener restaurantes (Nombre, Foto referencia, Calificación, size, page)
 //- Obtener los diferentes tipos de comida de los restaurantes (sin repeticiones)
+// Obtener los diferentes tipos de comida sin repeticiones
+app.MapGet("/restaurants/estilos", async () =>
+{
+    var pipeline = new[]
+    {
+        new BsonDocument("$unwind", "$Estilo"),
+        new BsonDocument("$group", new BsonDocument("_id", "$Estilo")),
+        new BsonDocument("$sort", new BsonDocument("_id", 1))
+    };
+
+    var result = await restaurantsCollection.AggregateAsync<BsonDocument>(pipeline);
+
+    var estilos = await result.ToListAsync();
+
+    var lista = estilos.Select(e => e["_id"].AsString).ToList();
+
+    return Results.Ok(lista);
+});
+
 //- Obtener ofertas (Nombre del artículo, Precio total, precio base, nomnre de restaurante, descuento, Foto de artículo, size, page)
 //- Obtener restaurante por nombre (Nombre, Foto referencia, Calificación)
 //- Obtener los elementos del carrito de ordenes que esten en estado "no ordenado"
@@ -130,8 +149,38 @@ app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestau
 });
 
 //- Añadir tarjeta a un usuario
+// Añadir o actualizar tarjeta de un usuario
+app.MapPatch("/user/{userId}/card", async (string userId, Card nuevaTarjeta) =>
+{
+    var filter = Builders<User>.Filter.Eq("_id", userId);
+    var update = Builders<User>.Update.Set("Tarjeta", nuevaTarjeta);
+
+    var result = await usersCollection.UpdateOneAsync(filter, update);
+
+    if (result.MatchedCount == 0)
+        return Results.NotFound($"User with id {userId} not found.");
+
+    return Results.Ok($"Card updated for user {userId}.");
+});
+
 //- Añadir artículo a carrito (actualizar el total a pagar)
-//- Cambiar estado de la orden
+
+
+// Cambiar estado de una orden
+app.MapPatch("/orders/{orderId}/status", async (string orderId, EstadoWrapper body) =>
+{
+    var filter = Builders<Order>.Filter.Eq("_id", orderId);
+    var update = Builders<Order>.Update.Set("Estado", body.Estado);
+
+    var result = await ordersCollection.UpdateOneAsync(filter, update);
+
+    if (result.MatchedCount == 0)
+        return Results.NotFound($"Order with id {orderId} not found.");
+
+    return Results.Ok($"Estado de la orden {orderId} actualizado a {body.Estado}.");
+});
+
+
 //DELETE:
 //- Borrar restaurante
 app.MapDelete("restaurants/{name}", async (string name) => 
