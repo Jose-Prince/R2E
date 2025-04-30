@@ -45,7 +45,7 @@ app.MapPost("/restaurants/{restaurantId}/reviews", async (string restaurantId, R
     var result = await restaurantsCollection.UpdateOneAsync(filter, update);
     
     if (result.ModifiedCount == 0)
-        return Results.NotFound($"Restaurante con id {restaurantId} no encontrado.");
+        return Results.NotFound($"Restaurant: {restaurantId} not found");
 
     return Results.Created($"/restaurants/{restaurantId}/reviews/{newReview.Id}", newReview);
 });
@@ -102,16 +102,16 @@ app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestau
         updates.Add(Builders<Restaurant>.Update.Set(r => r.Ubication, updatedRestaurant.Ubication));
 
     if (!updates.Any())
-        return Results.BadRequest("No hay campos válidos para actualizar.");
+        return Results.BadRequest("NO FIELDS TO UPDATE");
 
     var updateDef = Builders<Restaurant>.Update.Combine(updates);
 
     var result = await restaurantsCollection.UpdateOneAsync(filter, updateDef);
 
     if (result.MatchedCount == 0)
-        return Results.NotFound($"Restaurante con id {name} no encontrado.");
+        return Results.NotFound($"
 
-    return Results.Ok($"Restaurante con id {name} actualizado correctamente.");
+    return Results.Ok($"Restaurant: {name}, updated");
 });
 
 //- Añadir tarjeta a un usuario
