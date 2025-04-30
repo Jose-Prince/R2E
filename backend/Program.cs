@@ -14,6 +14,13 @@ var mongoClient = MongoDBConnection.Initialize(Env.GetString("MONGODB_URI"));
 //Get database
 var db = mongoClient.GetDatabase("R2E");
 
+// Collections
+var restaurantsCollection = db.GetCollection<Restaurant>("Restaurants");
+var ordersCollection = db.GetCollection<Order>("Orders");
+var productsCollection = db.GetCollection<MenuItem>("Products");
+var reviewCollection = db.GetCollection<Review>("Review");
+var usersCollection = db.GetCollection<User>("Users");
+
 app.MapGet("/", () => "Hello World!");
 
 
@@ -22,7 +29,6 @@ app.MapGet("/", () => "Hello World!");
 //- Crear un pedido
 app.MapPost("/orders", async (Order newOrder) =>
 {
-    var ordersCollection = db.GetCollection<Order>("orders");
     await ordersCollection.InsertOneAsync(newOrder);
     return Results.Created($"/orders/{newOrder.Id}", newOrder);
 });
@@ -30,7 +36,6 @@ app.MapPost("/orders", async (Order newOrder) =>
 //- Crear reseña asociada 
 app.MapPost("/restaurants/{restaurantId}/reviews", async (string restaurantId, Review newReview) =>
 {
-    var restaurantsCollection = db.GetCollection<Restaurant>("restaurants");
     // Generar nuevo Id para la reseña
     newReview.Id = ObjectId.GenerateNewId();
     // Filtro por restaurante
@@ -48,16 +53,14 @@ app.MapPost("/restaurants/{restaurantId}/reviews", async (string restaurantId, R
 // Crear un Restaurante
 app.MapPost("/restaurants", async (Restaurant newRestaurant) => 
 {
-    var restaurantsCollection = db.GetCollection<Restaurant>("Restaurants");
     await restaurantsCollection.InsertOneAsync(newRestaurant);
     return Results.Created($"/restaurants/{newRestaurant.Id}", newRestaurant);
 });
 
 //READ:
-// Obetener lista de restaurantes
+// Obtener lista de restaurantes
 app.MapGet("/restaurants",async () => 
 {
-    var restaurantsCollection = db.GetCollection<Restaurant>("Restaurants");
     var restaurants = await restaurantsCollection.Find(_ => true).ToListAsync();
 
     return Results.Ok(restaurants);
