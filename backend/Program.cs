@@ -118,6 +118,19 @@ app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestau
 //- Añadir artículo a carrito (actualizar el total a pagar)
 //- Cambiar estado de la orden
 //DELETE:
+//- Borrar restaurante
+app.MapDelete("restaurants/{name}", async (string name) => 
+{
+    var filter = Builders<Restaurant>.Filter.Eq(r => r.Name, name);
+
+    var result = await restaurantsCollection.DeleteOneAsync(filter);
+
+    if (result.DeletedCount == 0)
+        return Results.NotFound("COULDN'T DELETE RESTAURANT (NOT FOUND)");
+
+    return Results.Ok($"Restaurant: '{name}' deleted");
+});
+
 //- Quitar trajeta
 //- Eliminar una orden
 //
