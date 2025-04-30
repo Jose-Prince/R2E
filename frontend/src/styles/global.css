@@ -18,10 +18,27 @@
 
 .content-style {
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: 1fr 5fr;
+    grid-template-rows: 1fr;
+    height: 100%;
+}
+
+.sidebar-style, .subsidebar-style {
+    background-color: #111;
+    display: flex;
+    flex-direction: column;
+    font-size: 1.5rem;
 }
 
 .sidebar-style {
-    background-color: #111;
-    padding: 1vw;
+    justify-content: space-between;
+}
+
+a {
+    padding: 0.5vw;
+    padding-left: 2vw;
+}
+
+a:hover {
+    background-color: #AAA;
 }
