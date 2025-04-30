@@ -46,6 +46,12 @@ app.MapPost("/restaurants/{restaurantId}/reviews", async (string restaurantId, R
 });
 
 // Crear un Restaurante
+app.MapPost("/restaurants", async (Restaurant newRestaurant) => 
+{
+    var restaurantsCollection = db.GetCollection<Restaurant>("Restaurants");
+    await restaurantsCollection.InsertOneAsync(newRestaurant);
+    return Results.Created($"/restaurants/{newRestaurant.Id}", newRestaurant);
+});
 
 //READ:
 // Obetener lista de restaurantes
