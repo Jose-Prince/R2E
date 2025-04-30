@@ -82,7 +82,6 @@ app.MapGet("/orders", async () =>
 
 
 //- Obtener restaurantes (Nombre, Foto referencia, Calificación, size, page)
-//- Obtener los diferentes tipos de comida de los restaurantes (sin repeticiones)
 // Obtener los diferentes tipos de comida sin repeticiones
 app.MapGet("/restaurants/estilos", async () =>
 {
@@ -103,7 +102,31 @@ app.MapGet("/restaurants/estilos", async () =>
 });
 
 //- Obtener ofertas (Nombre del artículo, Precio total, precio base, nomnre de restaurante, descuento, Foto de artículo, size, page)
-//- Obtener restaurante por nombre (Nombre, Foto referencia, Calificación)
+
+// Obtener restaurante por nombre (Nombre, Foto_referencia, Calificación)
+app.MapGet("/restaurants/nombre/{nombre}", async (string nombre) =>
+{
+    var filter = Builders<Restaurant>.Filter.Eq("Nombre", nombre);
+
+    var projection = Builders<Restaurant>.Projection
+        .Include("Nombre")
+        .Include("Foto_referencia")
+        .Include("Calificación")
+        .Exclude("_id");
+
+    var bson = await restaurantsCollection
+        .Find(filter)
+        .Project<BsonDocument>(projection)
+        .FirstOrDefaultAsync();
+
+    if (bson == null)
+        return Results.NotFound($"No se encontró restaurante con nombre: {nombre}");
+
+    var dict = bson.ToDictionary();
+
+    return Results.Ok(dict);
+});
+
 //- Obtener los elementos del carrito de ordenes que esten en estado "no ordenado"
 //- Obtener ordenes para un cliente en estado ordenado y en camino (no se obtiene: Cliente)
 //- Obtener ordenes para un cliente en estado entregado (no se obtiene: Cliente)
