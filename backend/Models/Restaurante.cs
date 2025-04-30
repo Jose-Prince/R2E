@@ -5,31 +5,33 @@ public class Restaurant {
     [BsonId]
     public ObjectId Id {get; set;}
 
-    [BsonElement("name")]
+    [BsonElement("Nombre")]
     public string Name {get; set;}
 
-    [BsonElement("averageRating")]
+    [BsonElement("Calificación")]
     public int AverageRating {get; set;}
 
-    [BsonElement("location")]
+    [BsonElement("direccion")]
     public string Location { get; set; }
 
-    [BsonElement("photoLocationId"), BsonRepresentation(BsonType.ObjectId)]
+    [BsonElement("Foto_ubicación"), BsonRepresentation(BsonType.ObjectId)]
     public string PhotoLocationId { get; set; }
 
-    [BsonElement("photoReferenceId"), BsonRepresentation(BsonType.ObjectId)]
+    [BsonElement("Foto_referencia"), BsonRepresentation(BsonType.ObjectId)]
     public string PhotoReferenceId { get; set; }
 
-    [BsonElement("styles")]
+    [BsonElement("Estilo")]
     public List<string> Styles {get; set;}
 
-    [BsonElement("openingTime")]
-    public DateTime OpeningTime {get; set;}
+    [BsonElement("Hora_apertura")]
+    public String OpeningTime {get; set;}
 
-    [BsonElement("closingTime")]
-    public DateTime ClosingTime {get; set;}
+    [BsonElement("Hora_cierre")]
+    public String ClosingTime {get; set;}
 
-    [BsonElement("reviews")]
+    [BsonElement("List_Reseña")]
     public List<Review> Reviews {get; set;}
 
+    [BsonElement("ubicacion")]
+    public Object Ubication {get; set;}
 }
