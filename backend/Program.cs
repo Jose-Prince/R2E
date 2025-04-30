@@ -45,7 +45,18 @@ app.MapPost("/restaurants/{restaurantId}/reviews", async (string restaurantId, R
     return Results.Created($"/restaurants/{restaurantId}/reviews/{newReview.Id}", newReview);
 });
 
+// Crear un Restaurante
+
 //READ:
+// Obetener lista de restaurantes
+app.MapGet("/restaurants",async () => 
+{
+    var restaurantsCollection = db.GetCollection<Restaurant>("Restaurants");
+    var restaurants = await restaurantsCollection.Find(_ => true).ToListAsync();
+
+    return Results.Ok(restaurants);
+});
+
 //- Obtener restaurantes (Nombre, Foto referencia, Calificación, size, page)
 //- Obtener los diferentes tipos de comida de los restaurantes (sin repeticiones)
 //- Obtener ofertas (Nombre del artículo, Precio total, precio base, nomnre de restaurante, descuento, Foto de artículo, size, page)
@@ -61,4 +72,5 @@ app.MapPost("/restaurants/{restaurantId}/reviews", async (string restaurantId, R
 //DELETE:
 //- Quitar trajeta
 //- Eliminar una orden
+//
 app.Run();
