@@ -73,6 +73,18 @@ app.MapGet("/users", async () =>
     return Results.Ok(users);
 });
 
+//- Obtener usuario por id
+app.MapGet("/user/{id}", async (string id) =>
+{
+    var filter = Builders<User>.Filter.Eq(u => u.Id, id);
+    var user = await usersCollection.Find(filter).FirstOrDefaultAsync();
+
+    if (user is null)
+        return Results.NotFound($"Usuario con ID '{id}' no encontrado.");
+
+    return Results.Ok(user);
+});
+
 //- Obtener todas las ordenes
 app.MapGet("/orders", async () =>
 {
