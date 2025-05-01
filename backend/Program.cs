@@ -146,7 +146,27 @@ app.MapGet("/restaurants/nombre/{nombre}", async (string nombre) =>
 
 //- Obtener ordenes para un cliente en estado ordenado y en camino (no se obtiene: Cliente)
 //- Obtener ordenes para un cliente en estado entregado (no se obtiene: Cliente)
-//- Obtener los datos del cliente
+
+// Obtener los datos del cliente por ID
+app.MapGet("/users/{userId}", async (string userId) =>
+{
+    var filter = Builders<User>.Filter.Eq("_id", userId);
+    var user = await usersCollection.Find(filter).FirstOrDefaultAsync();
+    if (user == null)
+        return Results.NotFound($"User with id {userId} not found.");
+    return Results.Ok(user);
+});
+// Obtener los datos del cliente por nombre
+app.MapGet("/users/nombre/{nombre}", async (string nombre) =>
+{
+    var filter = Builders<User>.Filter.Eq("Nombre_y_Apellido", nombre);
+    var user = await usersCollection.Find(filter).FirstOrDefaultAsync();
+    if (user == null)
+        return Results.NotFound($"User with name {nombre} not found.");
+    return Results.Ok(user);
+});
+
+
 //UPDATE:
 //- Actualizar restaurante
 app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestaurant) => 
@@ -203,6 +223,7 @@ app.MapPatch("/user/{userId}/card", async (string userId, Card nuevaTarjeta) =>
 });
 
 //- Añadir artículo a carrito (actualizar el total a pagar)
+
 
 
 // Cambiar estado de una orden
