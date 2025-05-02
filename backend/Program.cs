@@ -187,7 +187,64 @@ app.MapGet("/restaurants/nombre/{nombre}", async (string nombre) =>
 
 
 //- Obtener ordenes para un cliente en estado ordenado y en camino (no se obtiene: Cliente)
-//- Obtener ordenes para un cliente en estado entregado (no se obtiene: Cliente)
+// Obtener órdenes de un cliente en estado “ordenado” (1) y “en camino” (2), sin incluir el campo Cliente
+app.MapGet("/orders/client/{clientId}", async (string clientId) =>
+{
+    // 1) Armar filtro: Cliente == clientId AND Estado in [1,2]
+    var filterEstado = Builders<Order>.Filter.In(o => o.Estado, new[]{ 1, 2 });
+    var filterCliente = Builders<Order>.Filter.Eq("Cliente", clientId);
+    var filter = Builders<Order>.Filter.And(filterCliente, filterEstado);
+
+    // 2) Proyección: excluir el campo Cliente
+    var projection = Builders<Order>.Projection
+        .Exclude("Cliente");
+
+    // 3) Ejecutar la consulta con proyección
+    var bsonOrders = await ordersCollection
+        .Find(filter)
+        .Project<BsonDocument>(projection)
+        .ToListAsync();
+
+    // 4) Convertir a diccionario para evitar problemas de serialización
+    var orders = bsonOrders
+        .Select(doc => doc.ToDictionary())
+        .ToList();
+
+    if (orders.Count == 0)
+        return Results.NotFound($"No orders found for client {clientId} in status 1 or 2.");
+
+    return Results.Ok(orders);
+});
+
+// Obtener órdenes para un cliente en estado “entregado” (3), sin incluir el campo Cliente
+app.MapGet("/orders/client/{clientId}/delivered", async (string clientId) =>
+{
+    // 1) Filtrar: Cliente == clientId AND Estado == 3
+    var filterEstado   = Builders<Order>.Filter.Eq(o => o.Estado, 3);
+    var filterCliente  = Builders<Order>.Filter.Eq("Cliente", clientId);
+    var filter         = Builders<Order>.Filter.And(filterCliente, filterEstado);
+
+    // 2) Proyección: excluir el campo Cliente
+    var projection = Builders<Order>.Projection
+        .Exclude("Cliente");
+
+    // 3) Ejecutar consulta
+    var bsonOrders = await ordersCollection
+        .Find(filter)
+        .Project<BsonDocument>(projection)
+        .ToListAsync();
+
+    // 4) Transformar a diccionario para json-safe
+    var orders = bsonOrders
+        .Select(doc => doc.ToDictionary())
+        .ToList();
+
+    if (orders.Count == 0)
+        return Results.NotFound($"No delivered orders found for client {clientId}.");
+
+    return Results.Ok(orders);
+});
+
 
 // Obtener los datos del cliente por ID
 app.MapGet("/users/{userId}", async (string userId) =>
