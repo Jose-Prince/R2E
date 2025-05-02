@@ -1,7 +1,7 @@
 using DotNetEnv;
 using MongoDB.Bson;
 using MongoDB.Driver;
-
+using backend.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -22,6 +22,7 @@ var reviewCollection = db.GetCollection<Review>("Review");
 var usersCollection = db.GetCollection<User>("Users");
 
 app.MapGet("/", () => "Hello World!");
+
 
 
 //ENDPOINTS:
@@ -186,7 +187,6 @@ app.MapGet("/restaurants/nombre/{nombre}", async (string nombre) =>
 
 
 
-//- Obtener ordenes para un cliente en estado ordenado y en camino (no se obtiene: Cliente)
 // Obtener órdenes de un cliente en estado “ordenado” (1) y “en camino” (2), sin incluir el campo Cliente
 app.MapGet("/orders/client/{clientId}", async (string clientId) =>
 {
@@ -255,6 +255,7 @@ app.MapGet("/users/{userId}", async (string userId) =>
         return Results.NotFound($"User with id {userId} not found.");
     return Results.Ok(user);
 });
+
 // Obtener los datos del cliente por nombre
 app.MapGet("/users/nombre/{nombre}", async (string nombre) =>
 {
@@ -306,8 +307,8 @@ app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestau
     return Results.Ok($"Restaurant: {name}, updated.");
 });
 
-//- Añadir tarjeta a un usuario
-// Añadir o actualizar tarjeta de un usuario
+
+// Añadir o actualizar tarjeta de un usuario y //- Añadir tarjeta a un usuario
 app.MapPatch("/user/{userId}/card", async (string userId, Card nuevaTarjeta) =>
 {
     var filter = Builders<User>.Filter.Eq("_id", userId);
@@ -322,6 +323,30 @@ app.MapPatch("/user/{userId}/card", async (string userId, Card nuevaTarjeta) =>
 });
 
 //- Añadir artículo a carrito (actualizar el total a pagar)
+
+
+// PATCH /orders/{orderId}/addItem
+app.MapPatch("/orders/{orderId}/addItem", async (string orderId, AddItemDto dto) =>
+{
+    // Verificar que el producto exista
+    var product = await productsCollection
+        .Find(p => p.Id == ObjectId.Parse(dto.ItemId))
+        .FirstOrDefaultAsync();
+    if (product == null)
+        return Results.NotFound($"Product with id {dto.ItemId} not found.");
+
+    // Actualizar carrito y total a pagar
+    var filter = Builders<Order>.Filter.Eq("_id", orderId);
+    var update = Builders<Order>.Update
+        .Push("Carrito", dto.ItemId)
+        .Inc("Total_a_pagar", product.TotalPrice);
+
+    var result = await ordersCollection.UpdateOneAsync(filter, update);
+    if (result.MatchedCount == 0)
+        return Results.NotFound($"Order with id {orderId} not found.");
+
+    return Results.Ok($"Item {dto.ItemId} added to order {orderId}, total increased by {product.TotalPrice}.");
+});
 
 
 
