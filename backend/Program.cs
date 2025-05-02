@@ -95,6 +95,7 @@ app.MapGet("/orders", async () =>
 
 
 //- Obtener restaurantes (Nombre, Foto referencia, Calificación, size, page)
+
 // Obtener los diferentes tipos de comida sin repeticiones
 app.MapGet("/restaurants/estilos", async () =>
 {
@@ -144,12 +145,10 @@ app.MapGet("/offers", async (int size, int page) =>
         new BsonDocument("$limit", size)
     };
 
-    // Ejecuta la agregación
     var ofertasBson = await productsCollection
         .Aggregate<BsonDocument>(pipeline)
         .ToListAsync();
 
-    // Convierte cada BsonDocument a Dictionary<string, object>
     var ofertas = ofertasBson
         .Select(doc => doc.ToDictionary())
         .ToList();
@@ -190,22 +189,18 @@ app.MapGet("/restaurants/nombre/{nombre}", async (string nombre) =>
 // Obtener órdenes de un cliente en estado “ordenado” (1) y “en camino” (2), sin incluir el campo Cliente
 app.MapGet("/orders/client/{clientId}", async (string clientId) =>
 {
-    // 1) Armar filtro: Cliente == clientId AND Estado in [1,2]
     var filterEstado = Builders<Order>.Filter.In(o => o.Estado, new[]{ 1, 2 });
     var filterCliente = Builders<Order>.Filter.Eq("Cliente", clientId);
     var filter = Builders<Order>.Filter.And(filterCliente, filterEstado);
 
-    // 2) Proyección: excluir el campo Cliente
     var projection = Builders<Order>.Projection
         .Exclude("Cliente");
 
-    // 3) Ejecutar la consulta con proyección
     var bsonOrders = await ordersCollection
         .Find(filter)
         .Project<BsonDocument>(projection)
         .ToListAsync();
 
-    // 4) Convertir a diccionario para evitar problemas de serialización
     var orders = bsonOrders
         .Select(doc => doc.ToDictionary())
         .ToList();
@@ -219,22 +214,18 @@ app.MapGet("/orders/client/{clientId}", async (string clientId) =>
 // Obtener órdenes para un cliente en estado “entregado” (3), sin incluir el campo Cliente
 app.MapGet("/orders/client/{clientId}/delivered", async (string clientId) =>
 {
-    // 1) Filtrar: Cliente == clientId AND Estado == 3
     var filterEstado   = Builders<Order>.Filter.Eq(o => o.Estado, 3);
     var filterCliente  = Builders<Order>.Filter.Eq("Cliente", clientId);
     var filter         = Builders<Order>.Filter.And(filterCliente, filterEstado);
 
-    // 2) Proyección: excluir el campo Cliente
     var projection = Builders<Order>.Projection
         .Exclude("Cliente");
 
-    // 3) Ejecutar consulta
     var bsonOrders = await ordersCollection
         .Find(filter)
         .Project<BsonDocument>(projection)
         .ToListAsync();
 
-    // 4) Transformar a diccionario para json-safe
     var orders = bsonOrders
         .Select(doc => doc.ToDictionary())
         .ToList();
@@ -322,30 +313,51 @@ app.MapPatch("/user/{userId}/card", async (string userId, Card nuevaTarjeta) =>
     return Results.Ok($"Card updated for user {userId}.");
 });
 
-//- Añadir artículo a carrito (actualizar el total a pagar)
-
-
-// PATCH /orders/{orderId}/addItem
+//- Añadir artículo a carrito actualizando el total
 app.MapPatch("/orders/{orderId}/addItem", async (string orderId, AddItemDto dto) =>
 {
-    // Verificar que el producto exista
-    var product = await productsCollection
-        .Find(p => p.Id == ObjectId.Parse(dto.ItemId))
+    var ordersCol = db.GetCollection<BsonDocument>("Orders");
+    var productsCol = db.GetCollection<BsonDocument>("Products");
+
+    if (string.IsNullOrWhiteSpace(dto.ItemId))
+        return Results.BadRequest("ItemId no puede estar vacío.");
+
+    var productDoc = await productsCol
+        .Find(Builders<BsonDocument>.Filter.Eq("_id", dto.ItemId))
         .FirstOrDefaultAsync();
-    if (product == null)
-        return Results.NotFound($"Product with id {dto.ItemId} not found.");
 
-    // Actualizar carrito y total a pagar
-    var filter = Builders<Order>.Filter.Eq("_id", orderId);
-    var update = Builders<Order>.Update
+    if (productDoc == null)
+        return Results.NotFound($"Producto con id {dto.ItemId} no encontrado.");
+
+    if (!productDoc.TryGetValue("Precio_Total", out var precioTotalVal) || !precioTotalVal.IsDouble)
+        return Results.BadRequest("El producto no tiene un precio válido.");
+
+    var precioProducto = precioTotalVal.AsDouble;
+
+    var update = Builders<BsonDocument>.Update
         .Push("Carrito", dto.ItemId)
-        .Inc("Total_a_pagar", product.TotalPrice);
+        .Inc("Total_a_pagar", precioProducto);
 
-    var result = await ordersCollection.UpdateOneAsync(filter, update);
+    var result = await ordersCol.UpdateOneAsync(
+        Builders<BsonDocument>.Filter.Eq("_id", orderId),
+        update
+    );
+
     if (result.MatchedCount == 0)
-        return Results.NotFound($"Order with id {orderId} not found.");
+        return Results.NotFound($"Orden con id {orderId} no encontrada.");
 
-    return Results.Ok($"Item {dto.ItemId} added to order {orderId}, total increased by {product.TotalPrice}.");
+    var ordenActualizada = await ordersCol
+        .Find(Builders<BsonDocument>.Filter.Eq("_id", orderId))
+        .FirstOrDefaultAsync();
+
+    var totalActual = ordenActualizada["Total_a_pagar"].AsDouble;
+
+    return Results.Ok(new 
+    {
+        Message = $"Artículo {dto.ItemId} añadido a la orden {orderId}.",
+        PrecioAñadido = precioProducto,
+        TotalActual = totalActual
+    });
 });
 
 
