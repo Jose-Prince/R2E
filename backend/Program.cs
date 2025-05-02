@@ -114,6 +114,48 @@ app.MapGet("/restaurants/estilos", async () =>
 });
 
 //- Obtener ofertas (Nombre del artículo, Precio total, precio base, nomnre de restaurante, descuento, Foto de artículo, size, page)
+app.MapGet("/offers", async (int size, int page) =>
+{
+    var skip = size * (page - 1);
+
+    var pipeline = new[]
+    {
+        new BsonDocument("$match", new BsonDocument("Descuento", new BsonDocument("$gt", 0))),
+        new BsonDocument("$lookup", new BsonDocument
+        {
+            { "from", restaurantsCollection.CollectionNamespace.CollectionName },
+            { "localField", "Restaurante" },
+            { "foreignField", "_id" },
+            { "as", "RestauranteInfo" }
+        }),
+        new BsonDocument("$unwind", "$RestauranteInfo"),
+        new BsonDocument("$project", new BsonDocument
+        {
+            { "_id", 0 },
+            { "NombreArticulo", "$Nombre" },
+            { "PrecioBase", "$Precio_Base" },
+            { "PrecioTotal", "$Precio_Total" },
+            { "Descuento", "$Descuento" },
+            { "NombreRestaurante", "$RestauranteInfo.Nombre" },
+            { "FotoArticulo", "$Foto_articulo" }
+        }),
+        new BsonDocument("$skip", skip),
+        new BsonDocument("$limit", size)
+    };
+
+    // Ejecuta la agregación
+    var ofertasBson = await productsCollection
+        .Aggregate<BsonDocument>(pipeline)
+        .ToListAsync();
+
+    // Convierte cada BsonDocument a Dictionary<string, object>
+    var ofertas = ofertasBson
+        .Select(doc => doc.ToDictionary())
+        .ToList();
+
+    return Results.Ok(ofertas);
+});
+
 
 // Obtener restaurante por nombre (Nombre, Foto_referencia, Calificación)
 app.MapGet("/restaurants/nombre/{nombre}", async (string nombre) =>
