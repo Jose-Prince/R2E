@@ -3,18 +3,33 @@
         v-model="drawer"
         temporary
       >
-      
-      
+  
       <v-list density="compact" nav>
-        <v-list-item prepend-icon="mdi-home" title="Home" value="home"></v-list-item>
-        <v-list-item prepend-icon="mdi-table-chair" title="Restaurants" value="restaurants"></v-list-item>
-        <v-list-item prepend-icon="mdi-sale" title="Sales" value="sales"></v-list-item>
-        <v-list-item prepend-icon="mdi-silverware-fork-knife" title="Orders" value="orders"></v-list-item>
+        <v-list-item 
+          prepend-icon="mdi-home"   
+          title="Home" 
+          @click="updateParams('home')"
+        ></v-list-item>
+        <v-list-item 
+          prepend-icon="mdi-table-chair" 
+          title="Restaurants" 
+          @click="updateParams('restaurants')"
+        ></v-list-item>
+        <v-list-item 
+          prepend-icon="mdi-sale" 
+          title="Sales" 
+          @click="updateParams('sales')"
+        ></v-list-item>
+        <v-list-item 
+          prepend-icon="mdi-silverware-fork-knife" 
+          title="Orders" 
+          @click="updateParams('orders')"
+        ></v-list-item>
         <v-divider></v-divider>
         <v-list-item
-        prepend-icon="mdi-account"
-        title="Profile"
-        value="profile"
+          prepend-icon="mdi-account"
+          title="Profile"
+          @click="updateParams('profile')"
         ></v-list-item>
 
       </v-list>
@@ -44,8 +59,20 @@ export default  {
 </script>
 
 <script setup>
+import { useRouter, useRoute } from 'vue-router'
 import { ref } from 'vue'
 
 const drawer = ref(null)
+
+const router = useRouter()
+const route = useRoute()
+
+function updateParams(newParam) {
+  router.replace({
+    query: {
+      page: newParam
+    }
+  })
+}
 
 </script>
