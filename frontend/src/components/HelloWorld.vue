@@ -1,6 +1,6 @@
 <template>
-  <v-container class="fill-height" max-width="900">
-    <div v-if="page == '' || page == 'home'"> 
+  <v-container class="fil-height" max-width="900" style="margin-left: 0; margin-right: 0">
+    <div v-if="!page || page == 'home'">
       <strong>{{ page }}</strong>
     </div>
     <div v-else-if="page == 'restaurants'">
@@ -13,7 +13,10 @@
       Mostrando todos los orders
     </div>
     <div v-else-if="page == 'profile'">
-      Mostrando todos los profile
+      <UserInfo />
+    </div>
+    <div v-else>
+      No carga
     </div>
   </v-container>
 </template>
@@ -21,7 +24,7 @@
 <script setup>
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
-
+import UserInfo from './UserInfo.vue'
 const route = useRoute()
 
 const page = computed(() => route.query.page)
