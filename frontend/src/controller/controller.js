@@ -34,3 +34,29 @@ export async function updateUser(id, updatedUser) {
     throw error
   }
 }
+
+export async function getStyles() {
+  try {
+    const response = await fetch(`http://localhost:5125/restaurants/estilos`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error getting styles: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error getting styles:`, error);
+    throw error;
+  }
+}
+
+export async function getSales() {
+
+}
+
+export async function getRestaurants() {
+
+}
