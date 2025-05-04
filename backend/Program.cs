@@ -231,6 +231,34 @@ app.MapPatch("/orders/{orderId}/status", async (string orderId, EstadoWrapper bo
     return Results.Ok($"Estado de la orden {orderId} actualizado a {body.Estado}.");
 });
 
+// Cambiar valores de usuario
+app.MapPatch("/users/{id}", async (string id, User updatedUser) =>
+{
+    var filter = Builders<User>.Filter.Eq(u => u.Id, id);
+
+    var updates = new List<UpdateDefinition<User>>();
+
+    if (!string.IsNullOrEmpty(updatedUser.Name))
+        updates.Add(Builders<User>.Update.Set(u => u.Name, updatedUser.Name));
+    if (!string.IsNullOrEmpty(updatedUser.Email))
+        updates.Add(Builders<User>.Update.Set(u => u.Email, updatedUser.Email));
+    if (updatedUser.Address != null && updatedUser.Address.Any())
+        updates.Add(Builders<User>.Update.Set(u => u.Address, updatedUser.Address));
+    if (updatedUser.Tarjeta != null)
+        updates.Add(Builders<User>.Update.Set(u => u.Tarjeta, updatedUser.Tarjeta));
+
+    if (!updates.Any())
+        return Results.BadRequest("NO FIELDS TO UPDATE");
+
+    var updateDef = Builders<User>.Update.Combine(updates);
+
+    var result = await usersCollection.UpdateOneAsync(filter, updateDef);
+
+    if (result.MatchedCount == 0)
+        return Results.NotFound($"Usuario con ID '{id}' no encontrado.");
+
+    return Results.Ok($"Usuario con ID '{id}' actualizado correctamente.");
+});
 
 //DELETE:
 //- Borrar restaurante

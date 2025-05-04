@@ -8,13 +8,13 @@ public class User
     public String Id { get; set; }
 
     [BsonElement("Nombre_y_Apellido")]
-    public string NombreYApellido { get; set; }
+    public string Name { get; set; }
 
     [BsonElement("Correo")]
-    public string Correo { get; set; }
+    public string Email { get; set; }
 
     [BsonElement("Dirección_entrega")]
-    public List<string> DireccionesEntrega { get; set; }
+    public List<string> Address { get; set; }
 
     [BsonElement("Tarjeta")]
     public Card Tarjeta { get; set; }
