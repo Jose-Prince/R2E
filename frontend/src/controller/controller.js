@@ -58,5 +58,19 @@ export async function getSales() {
 }
 
 export async function getRestaurants() {
+  try {
+    const response = await fetch(`http://localhost:5125/restaurants`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
 
+    if (!response.ok) {
+      throw new Error(`Error getting restaurants: ${response.statusText}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error(`Error getting styles:`, error);
+    throw error;
+  }
 }

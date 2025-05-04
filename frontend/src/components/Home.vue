@@ -19,19 +19,49 @@
 
     <h1>Restaurants</h1>
     <v-divider></v-divider>
+    <v-slide-group show-arrows>
+      <v-slide-item
+        v-for="restaurant in restaurants"
+        :key="restaurant.id.timestamp"
+      >
+        <v-card class="mx-2" width="250">
+          <v-card-title class="text-h6">{{ restaurant.name }}</v-card-title>
+          <v-card-subtitle>{{ restaurant.location }}</v-card-subtitle>
+          <v-card-text>
+            <div><strong>Rating:</strong> {{ restaurant.averageRating }}</div>
+            <div>
+              <strong>Hours:</strong> {{ restaurant.openingTime }} - {{ restaurant.closingTime }}
+            </div>
+            <div>
+              <strong>Styles:</strong>
+              <v-chip
+                v-for="style in restaurant.styles"
+                :key="style"
+                class="ma-1"
+                size="small"
+              >
+                {{ style }}
+              </v-chip>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-slide-item>
+    </v-slide-group>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getStyles } from '../controller/controller.js'
+import { getStyles, getRestaurants } from '../controller/controller.js'
 
 const styles = ref([])
 const selectedStyles = ref([])
+const restaurants = ref([])
 
 onMounted(async () => {
   try {
     styles.value = await getStyles()
+    restaurants.value = await getRestaurants()
   } catch (err) {
     console.error('Error al obtener estilos:', err)
   }

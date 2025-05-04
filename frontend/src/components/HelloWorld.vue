@@ -1,5 +1,5 @@
 <template>
-  <v-container class="fil-height" max-width="900" style="margin-left: 0; margin-right: 0">
+  <v-container class="fil-height" style="max-width: none; margin-left: 0; margin-right: 0">
     <div v-if="!page || page == 'home'">
       <Home />
     </div>
