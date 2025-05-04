@@ -1,7 +1,7 @@
 <template>
   <v-container class="fil-height" max-width="900" style="margin-left: 0; margin-right: 0">
     <div v-if="!page || page == 'home'">
-      <strong>{{ page }}</strong>
+      <Home />
     </div>
     <div v-else-if="page == 'restaurants'">
       Mostrando todos los restaurantes
@@ -25,6 +25,7 @@
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
 import UserInfo from './UserInfo.vue'
+import Home from './Home.vue'
 const route = useRoute()
 
 const page = computed(() => route.query.page)
