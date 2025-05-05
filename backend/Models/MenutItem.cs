@@ -4,7 +4,7 @@ using MongoDB.Bson.Serialization.Attributes;
 public class MenuItem {
   [BsonId]
   [BsonElement("id")]
-  public ObjectId Id { get; set; }
+  public string Id { get; set; }
 
   [BsonElement("Nombre")]
   public string Name { get; set; }

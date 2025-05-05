@@ -15,6 +15,9 @@
     <div v-else-if="page == 'profile'">
       <UserInfo />
     </div>
+    <div v-else-if="page == 'cart'">
+      <Cart />
+    </div>
     <div v-else>
       No carga
     </div>
@@ -27,6 +30,7 @@ import { computed } from 'vue'
 import UserInfo from './UserInfo.vue'
 import Home from './Home.vue'
 import Items from './GridItems.vue'
+import Cart from './Cart.vue'
 const route = useRoute()
 
 const page = computed(() => route.query.page)
