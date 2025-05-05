@@ -39,6 +39,11 @@
               class="mt-2"
             ></v-img>
           </v-card-text>
+          <v-card-actions>
+            <v-btn @click="addToCart(sale)">
+              Add to cart
+            </v-btn>
+          </v-card-actions>
         </v-card>
       </v-slide-item>
     </v-slide-group>
@@ -84,8 +89,10 @@ const styles = ref([])
 const selectedStyles = ref([])
 const restaurants = ref([])
 const sales = ref([])
+const cart = ref([])
 
 onMounted(async () => {
+  loadCart()
   try {
     styles.value = await getStyles()
     restaurants.value = await getRestaurants()
@@ -101,6 +108,22 @@ function toggleStyle(style) {
     selectedStyles.value.push(style)
   } else {
     selectedStyles.value.splice(index, 1)
+  }
+}
+
+function addToCart(product) {
+  cart.value.push(product);
+  saveCart();
+}
+
+function saveCart() {
+  localStorage.setItem('Cart', JSON.stringify(cart.value));
+}
+
+function loadCart() {
+  const storedCart = localStorage.getItem('Cart');
+  if (storedCart) {
+    cart.value = JSON.parse(storedCart);
   }
 }
 </script>

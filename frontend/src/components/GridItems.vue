@@ -29,6 +29,11 @@
                 class="mt-2"
               ></v-img>
             </v-card-text>
+            <v-card-actions>
+              <v-btn @click="addToCart(sale)">
+                Add to cart
+              </v-btn>
+            </v-card-actions>
           </v-card>
         </v-col>
       </v-row>
@@ -99,9 +104,11 @@ const styles = ref([]);
 const selectedStyles = ref([]);
 const restaurants = ref([]);
 const sales = ref([]);
+const cart = ref([]);
 
 onMounted(async () => {
   routeQuery.value = route.query.page;
+  loadCart(); // Cargar el carrito al montar el componente
 
   try {
     if (routeQuery.value === 'restaurants') {
@@ -120,6 +127,22 @@ function toggleStyle(style) {
     selectedStyles.value.push(style);
   } else {
     selectedStyles.value.splice(index, 1);
+  }
+}
+
+function addToCart(product) {
+  cart.value.push(product);
+  saveCart();
+}
+
+function saveCart() {
+  localStorage.setItem('Cart', JSON.stringify(cart.value));
+}
+
+function loadCart() {
+  const storedCart = localStorage.getItem('Cart');
+  if (storedCart) {
+    cart.value = JSON.parse(storedCart);
   }
 }
 </script>
