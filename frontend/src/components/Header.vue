@@ -3,26 +3,26 @@
         v-model="drawer"
         temporary
       >
-  
+
       <v-list density="compact" nav>
-        <v-list-item 
-          prepend-icon="mdi-home"   
-          title="Home" 
+        <v-list-item
+          prepend-icon="mdi-home"
+          title="Home"
           @click="updateParams('home')"
         ></v-list-item>
-        <v-list-item 
-          prepend-icon="mdi-table-chair" 
-          title="Restaurants" 
+        <v-list-item
+          prepend-icon="mdi-table-chair"
+          title="Restaurants"
           @click="updateParams('restaurants')"
         ></v-list-item>
-        <v-list-item 
-          prepend-icon="mdi-sale" 
-          title="Sales" 
+        <v-list-item
+          prepend-icon="mdi-sale"
+          title="Sales"
           @click="updateParams('sales')"
         ></v-list-item>
-        <v-list-item 
-          prepend-icon="mdi-silverware-fork-knife" 
-          title="Orders" 
+        <v-list-item
+          prepend-icon="mdi-silverware-fork-knife"
+          title="Orders"
           @click="updateParams('orders')"
         ></v-list-item>
         <v-divider></v-divider>
@@ -47,7 +47,7 @@
           placeholder="Search restaurant..."
           class="flex-grow-1"
         ></v-text-field>
-        <v-icon-btn color="primary" icon="$vuetify" variant="outlined"></v-icon-btn>
+        <v-icon-btn color="primary" icon="mdi-cart-outline" variant="outlined" @click="updateParams('cart')"></v-icon-btn>
       </div>
     </v-app-bar>
 </template>

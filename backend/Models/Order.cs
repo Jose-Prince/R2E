@@ -5,7 +5,7 @@ using MongoDB.Bson.Serialization.Attributes;
 public class Order
 {
     [BsonId]
-    public required string Id { get; set; }
+    public string Id { get; set; }
 
     [BsonElement("No_orden")]
     public int NoOrden { get; set; }

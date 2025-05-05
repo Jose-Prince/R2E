@@ -4,16 +4,19 @@
       <Home />
     </div>
     <div v-else-if="page == 'restaurants'">
-      Mostrando todos los restaurantes
+      <Items />
     </div>
     <div v-else-if="page == 'sales'">
-      Mostrando todos los sales
+      <Items />
     </div>
     <div v-else-if="page == 'orders'">
       Mostrando todos los orders
     </div>
     <div v-else-if="page == 'profile'">
       <UserInfo />
+    </div>
+    <div v-else-if="page == 'cart'">
+      <Cart />
     </div>
     <div v-else>
       No carga
@@ -26,6 +29,8 @@ import { useRoute } from 'vue-router'
 import { computed } from 'vue'
 import UserInfo from './UserInfo.vue'
 import Home from './Home.vue'
+import Items from './GridItems.vue'
+import Cart from './Cart.vue'
 const route = useRoute()
 
 const page = computed(() => route.query.page)
