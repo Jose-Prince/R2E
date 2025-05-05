@@ -201,6 +201,13 @@ app.MapGet("/orders", async () =>
     return Results.Ok(orders);
 });
 
+
+app.MapGet("/reviews", async () =>
+{
+    var reviews = await reviewCollection.Find(_ => true).ToListAsync();
+    return Results.Ok(reviews);
+});
+
 // Obtener los diferentes tipos de comida sin repeticiones
 app.MapGet("/restaurants/estilos", async () =>
 {
@@ -348,6 +355,22 @@ app.MapPatch("/orders/{orderId}/status", async (string orderId, EstadoWrapper bo
     return Results.Ok($"Estado de la orden {orderId} actualizado a {body.Estado}.");
 });
 
+app.MapPatch("/review/{reviewId}", async (string reviewId, Review update) =>
+{
+    var filter = Builders<Review>.Filter.Eq("_id", ObjectId.Parse(reviewId));
+    var updateDef = Builders<Review>.Update
+        .Set("Calificación", update.Calificación)
+        .Set("Comentario", update.Comentario);
+    var result = await reviewCollection.UpdateOneAsync(filter, updateDef);
+
+    if (result.MatchedCount == 0)
+        return Results.NotFound($"Review with id {reviewId} not found.");
+
+    return Results.Ok($"Review {reviewId} updated with new Calificación and Comentario.");
+});
+
+
+
 // Cambiar valores de usuario
 app.MapPatch("/users/{id}", async (string id, User updatedUser) =>
 {
@@ -390,6 +413,24 @@ app.MapDelete("restaurants/{name}", async (string name) =>
 
     return Results.Ok($"Restaurant: '{name}' deleted");
 });
+
+
+
+//Elimina el review
+app.MapDelete("review/{id}", async (string id) => 
+{
+    var filter = Builders<Review>.Filter.Eq(r => r.Id, id);
+
+    var result = await reviewCollection.DeleteOneAsync(filter);
+
+    if (result.DeletedCount == 0)
+        return Results.NotFound("COULDN'T DELETE RESTAURANT (NOT FOUND)");
+
+    return Results.Ok($"Review: '{id}' deleted");
+});
+
+
+
 
 //- Quitar tarjeta
 app.MapDelete("user/{userId}/card", async (string userId) =>

@@ -24,10 +24,10 @@ public class Restaurant {
     public List<string> Styles {get; set;}
 
     [BsonElement("Hora_apertura")]
-    public String OpeningTime {get; set;}
+    public String? OpeningTime {get; set;}
 
     [BsonElement("Hora_cierre")]
-    public String ClosingTime {get; set;}
+    public String? ClosingTime {get; set;}
 
     [BsonElement("List_Reseña")]
     public List<Review> Reviews {get; set;}
