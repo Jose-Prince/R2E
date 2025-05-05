@@ -46,7 +46,7 @@ app.MapPost("/orders", async (Order request) =>
     {
         Id = ObjectId.GenerateNewId().ToString(),
         NoOrden = new Random().Next(100000, 999999), // Puedes ajustar cómo generas el número de orden
-        Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+        Timestamp = DateTime.UtcNow,
         TotalAPagar = request.TotalAPagar,
         Carrito = request.Carrito,
         Estado = 0,
@@ -156,9 +156,6 @@ app.MapPost("/products/", async (HttpRequest request) =>
     });
 });
 
-
-
-
 // Crear un Restaurante
 app.MapPost("/restaurants", async (Restaurant newRestaurant) => 
 {
@@ -192,13 +189,6 @@ app.MapGet("/user/{id}", async (string id) =>
         return Results.NotFound($"Usuario con ID '{id}' no encontrado.");
 
     return Results.Ok(user);
-});
-
-//- Obtener todas las ordenes
-app.MapGet("/orders", async () =>
-{
-    var orders = await ordersCollection.Find(_ => true).ToListAsync();
-    return Results.Ok(orders);
 });
 
 // Obtener los diferentes tipos de comida sin repeticiones
@@ -272,10 +262,29 @@ app.MapGet("/restaurants/nombre/{nombre}", async (string nombre) =>
 // Obtener productos del carrito de órdenes no ordenadas (Estado = 0)
 // no pude
 
+//- Obtener todas las ordenes segun estado
+app.MapGet("/orders", async (HttpRequest request) =>
+{
+    var estados = request.Query["estado"].Select(e => int.TryParse(e, out var val) ? val : (int?)null)
+                                        .Where(e => e.HasValue)
+                                        .Select(e => e!.Value)
+                                        .ToList();
 
+    FilterDefinition<Order> filter;
 
-//- Obtener ordenes para un cliente en estado ordenado y en camino (no se obtiene: Cliente)
-//- Obtener ordenes para un cliente en estado entregado (no se obtiene: Cliente)
+    if (estados.Any())
+    {
+        filter = Builders<Order>.Filter.In(o => o.Estado, estados);
+    }
+    else
+    {
+        filter = Builders<Order>.Filter.Empty;
+    }
+
+    var orders = await ordersCollection.Find(filter).ToListAsync();
+    return Results.Ok(orders);
+});
+
 //UPDATE:
 //- Actualizar restaurante
 app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestaurant) => 
