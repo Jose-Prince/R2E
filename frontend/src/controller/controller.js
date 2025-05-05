@@ -150,3 +150,30 @@ export async function getOrdersByState(state) {
     throw error
   }
 }
+
+export async function updateOrderStatus(orderId, newState) {
+  try {
+    const url = `http://localhost:5125/orders/${orderId}/status`;
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ estado: newState }), // Assuming 'EstadoWrapper' in C# has a property 'Estado'
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(`Order with id ${orderId} not found.`);
+      } else {
+        const errorData = await response.json();
+        throw new Error(`Error updating order status: ${response.status} - ${errorData.message || 'Unknown error'}`);
+      }
+    }
+
+    return await response.text(); // The C# endpoint returns a success message as text
+  } catch (error) {
+    console.error(`Error updating order ${orderId} status:`, error);
+    throw error;
+  }
+}
