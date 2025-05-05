@@ -17,6 +17,32 @@
     <h1>Sales</h1>
     <v-divider></v-divider>
 
+    <v-slide-group show-arrows>
+      <v-slide-item
+        v-for="sale in sales"
+        :key="sale.id.timestamp"
+      >
+        <v-card class="mx-2" width="250">
+          <v-card-title class="text-h6">{{ sale.name }}</v-card-title>
+          <v-card-subtitle>Price: ${{ sale.totalPrice.toFixed(2) }}</v-card-subtitle>
+          <v-card-text>
+            <div><strong>Description:</strong> {{ sale.description }}</div>
+            <div><strong>Type:</strong> {{ sale.type }}</div>
+            <div v-if="sale.ingredients && sale.ingredients.length > 0">
+              <strong>Ingridients:</strong> {{ sale.ingredients.join(', ') }}
+            </div>
+            <div><strong>Rating:</strong> {{ sale.rating }}</div>
+            <v-img
+              :src="sale.photoItemId"
+              height="150"
+              cover
+              class="mt-2"
+            ></v-img>
+          </v-card-text>
+        </v-card>
+      </v-slide-item>
+    </v-slide-group>
+
     <h1>Restaurants</h1>
     <v-divider></v-divider>
     <v-slide-group show-arrows>
@@ -52,16 +78,18 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getStyles, getRestaurants } from '../controller/controller.js'
+import { getStyles, getRestaurants, getSales } from '../controller/controller.js'
 
 const styles = ref([])
 const selectedStyles = ref([])
 const restaurants = ref([])
+const sales = ref([])
 
 onMounted(async () => {
   try {
     styles.value = await getStyles()
     restaurants.value = await getRestaurants()
+    sales.value = await getSales()
   } catch (err) {
     console.error('Error al obtener estilos:', err)
   }

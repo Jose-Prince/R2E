@@ -54,7 +54,42 @@ export async function getStyles() {
 }
 
 export async function getSales() {
+  try {
+    const response = await fetch('http://localhost:5125/sales', {
+      method: 'GET',
+      headers: { "Content-Type": "application/json" },
+    });
 
+    if (!response.ok) {
+      throw new Error(`Error in request: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching sales:", error);
+    throw error;
+  }
+}
+
+export async function getRestaurantById(id) {
+  try {
+    const response = await fetch(`http://localhost:5125/restaurants/id/${id}`, {
+      method: 'GET',
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null; // Indica que no se encontró el restaurante
+      }
+      throw new Error(`Error fetching restaurant: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error fetching restaurant with ID ${id}:`, error);
+    throw error;
+  }
 }
 
 export async function getRestaurants() {
