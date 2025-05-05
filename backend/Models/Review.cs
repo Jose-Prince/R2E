@@ -1,18 +1,23 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-public class Review {
-  [BsonId] 
-  public ObjectId Id { get; set; }
+public class Review
+{
+    [BsonId]
+    public string Id { get; set; }
 
-  [BsonElement("customerId"), BsonRepresentation(BsonType.ObjectId)]
-  public string CustomerId { get; set; }
+    [BsonElement("Restaurante")]
+    public string RestaurantId { get; set; }
 
-  [BsonElement("rating")]
-  public int Rating { get; set; }
+    [BsonElement("Cliente")]
 
-  [BsonElement("comment")]
-  public string Comment { get; set; }
+    public string Cliente { get; set; }
+
+    [BsonElement("Calificación")]
+    public int Calificación { get; set; }
+
+    [BsonElement("Comentario")]
+    public string Comentario { get; set; }
 }
 
 
