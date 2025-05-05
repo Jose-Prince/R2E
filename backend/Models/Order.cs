@@ -11,7 +11,7 @@ public class Order
     public int NoOrden { get; set; }
 
     [BsonElement("Timestamp")]
-    public long Timestamp { get; set; }
+    public DateTime Timestamp { get; set; }
 
     [BsonElement("Total_a_pagar")]
     public double TotalAPagar { get; set; }

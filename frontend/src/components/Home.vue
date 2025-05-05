@@ -94,9 +94,9 @@ const cart = ref([])
 onMounted(async () => {
   loadCart()
   try {
+    sales.value = await getSales()
     styles.value = await getStyles()
     restaurants.value = await getRestaurants()
-    sales.value = await getSales()
   } catch (err) {
     console.error('Error al obtener estilos:', err)
   }

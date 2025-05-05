@@ -1,5 +1,36 @@
 <template>
   <div>
+    <v-dialog v-model="dialog" width="500">
+      <v-card>
+        <v-card-title class="text-h5">
+          {{ selectedRestaurant?.name }} Reviews
+        </v-card-title>
+        <v-card-text>
+          <div v-if="selectedRestaurant">
+            <div><strong>Location:</strong> {{ selectedRestaurant.location }}</div>
+            <div><strong>Rating:</strong> {{ selectedRestaurant.averageRating }}</div>
+            <div>
+              <strong>Hours:</strong> {{ selectedRestaurant.openingTime }} - {{ selectedRestaurant.closingTime }}
+            </div>
+            <div>
+              <strong>Styles:</strong>
+              <v-chip
+                v-for="style in selectedRestaurant.styles"
+                :key="style"
+                class="ma-1"
+                size="small"
+              >
+                {{ style }}
+              </v-chip>
+            </div>
+            </div>
+        </v-card-text>
+        <v-card-actions class="justify-end">
+          <v-btn color="primary" @click="dialog = false">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <div v-if="routeQuery === 'sales' && sales.length > 0">
       <h1>Sales</h1>
       <v-divider></v-divider>
@@ -70,6 +101,11 @@
                 </v-chip>
               </div>
             </v-card-text>
+            <v-card-actions>
+              <v-btn @click="openRestaurantDetails(restaurant)">
+                View Reviews
+              </v-btn>
+            </v-card-actions>
           </v-card>
         </v-col>
       </v-row>
@@ -95,12 +131,13 @@
 <script setup>
 import { useRoute } from 'vue-router';
 import { ref, onMounted } from 'vue';
-import { getStyles, getRestaurants, getSales } from '../controller/controller.js';
+import { getRestaurants, getSales } from '../controller/controller.js';
 
 const route = useRoute();
 const routeQuery = ref('');
 
-const styles = ref([]);
+const dialog = ref(false);
+const selectedRestaurant = ref(null);
 const selectedStyles = ref([]);
 const restaurants = ref([]);
 const sales = ref([]);
@@ -144,6 +181,11 @@ function loadCart() {
   if (storedCart) {
     cart.value = JSON.parse(storedCart);
   }
+}
+
+function openRestaurantDetails(restaurant) {
+  selectedRestaurant.value = restaurant;
+  dialog.value = true;
 }
 </script>
 

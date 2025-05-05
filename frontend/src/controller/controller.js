@@ -109,3 +109,71 @@ export async function getRestaurants() {
     throw error;
   }
 }
+
+export async function createOrder(newOrder) {
+  try {
+    const response = await fetch('http://localhost:5125/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newOrder),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Error creating order:', error);
+      throw new Error(`Error creating order: ${response.status} - ${JSON.stringify(error)}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating order:', error);
+    throw error;
+  }
+}
+
+export async function getOrdersByState(state) {
+  try {
+    const response = await fetch(`http://localhost:5125/orders?stado=${state}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Error getting orders: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error(`Error getting orders:`, error)
+    throw error
+  }
+}
+
+export async function updateOrderStatus(orderId, newState) {
+  try {
+    const url = `http://localhost:5125/orders/${orderId}/status`;
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ estado: newState }), // Assuming 'EstadoWrapper' in C# has a property 'Estado'
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(`Order with id ${orderId} not found.`);
+      } else {
+        const errorData = await response.json();
+        throw new Error(`Error updating order status: ${response.status} - ${errorData.message || 'Unknown error'}`);
+      }
+    }
+
+    return await response.text(); // The C# endpoint returns a success message as text
+  } catch (error) {
+    console.error(`Error updating order ${orderId} status:`, error);
+    throw error;
+  }
+}

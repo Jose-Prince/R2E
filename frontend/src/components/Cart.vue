@@ -61,6 +61,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { createOrder } from '../controller/controller.js'
 
 const cartItems = ref([]);
 
@@ -91,9 +92,16 @@ function calculateTotalPrice() {
 }
 
 function placeOrder() {
+
+  const newOrder = {
+    ClienteId: localStorage.getItem('ID'),
+    TotalAPagar: calculateTotalPrice(),
+    Carrito: cartItems.value.map(item => item.id)
+  }
   if (cartItems.value.length > 0) {
     cartItems.value = [];
     saveCart();
+    createOrder(newOrder)
     alert('¡Pedido realizado!'); // Replace with your actual order processing logic
   }
 }

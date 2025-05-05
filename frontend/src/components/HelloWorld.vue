@@ -10,7 +10,7 @@
       <Items />
     </div>
     <div v-else-if="page == 'orders'">
-      Mostrando todos los orders
+      <Orders />
     </div>
     <div v-else-if="page == 'profile'">
       <UserInfo />
@@ -31,6 +31,7 @@ import UserInfo from './UserInfo.vue'
 import Home from './Home.vue'
 import Items from './GridItems.vue'
 import Cart from './Cart.vue'
+import Orders from './Orders.vue'
 const route = useRoute()
 
 const page = computed(() => route.query.page)
