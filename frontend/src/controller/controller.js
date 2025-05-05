@@ -132,3 +132,21 @@ export async function createOrder(newOrder) {
     throw error;
   }
 }
+
+export async function getOrdersByState(state) {
+  try {
+    const response = await fetch(`http://localhost:5125/orders?stado=${state}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Error getting orders: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error(`Error getting orders:`, error)
+    throw error
+  }
+}
