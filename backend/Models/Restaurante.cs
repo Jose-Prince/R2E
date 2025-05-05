@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 public class Restaurant {
     [BsonId]
-    public ObjectId Id {get; set;}
+    public string Id {get; set;}
 
     [BsonElement("Nombre")]
     public string Name {get; set;}

@@ -1,7 +1,7 @@
 using DotNetEnv;
 using MongoDB.Bson;
 using MongoDB.Driver;
-
+using MongoDB.Driver.GridFS;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +25,7 @@ var mongoClient = MongoDBConnection.Initialize(Env.GetString("MONGODB_URI"));
 
 //Get database
 var db = mongoClient.GetDatabase("R2E");
+var gridFS = new GridFSBucket(db);
 
 // Collections
 var restaurantsCollection = db.GetCollection<Restaurant>("Restaurants");
@@ -45,22 +46,106 @@ app.MapPost("/orders", async (Order newOrder) =>
     return Results.Created($"/orders/{newOrder.Id}", newOrder);
 });
 
-//- Crear reseña asociada 
-app.MapPost("/restaurants/{restaurantId}/reviews", async (string restaurantId, Review newReview) =>
+app.MapPost("/upload", async (HttpRequest request) =>
 {
-    // Generar nuevo Id para la reseña
-    newReview.Id = ObjectId.GenerateNewId();
-    // Filtro por restaurante
-    var filter = Builders<Restaurant>.Filter.Eq(r => r.Id, ObjectId.Parse(restaurantId));
-    // Agregar la reseña al arreglo
-    var update = Builders<Restaurant>.Update.Push(r => r.Reviews, newReview);
-    var result = await restaurantsCollection.UpdateOneAsync(filter, update);
-    
-    if (result.ModifiedCount == 0)
-        return Results.NotFound($"Restaurant: {restaurantId} not found");
+    var form = await request.ReadFormAsync();
+    var file = form.Files["file"];
 
-    return Results.Created($"/restaurants/{restaurantId}/reviews/{newReview.Id}", newReview);
+    if (file == null || file.Length == 0)
+        return Results.BadRequest("File is missing or empty.");
+
+    using var stream = file.OpenReadStream();
+    var fileId = await gridFS.UploadFromStreamAsync(file.FileName, stream);
+
+    return Results.Ok(new { id = fileId.ToString(), filename = file.FileName });
 });
+
+
+
+// Utiliza Bulkwrite para insertar un documento a review y por otro lado utiliza un update para arreglar la Calificación del restaurante
+app.MapPost("/reviews/{restaurantId}", async (string restaurantId, HttpRequest request) =>
+{
+    // Now you have the `restaurantId` from the URL path
+    if (string.IsNullOrEmpty(restaurantId))
+    {
+        return Results.BadRequest("Missing restaurantId.");
+    }
+
+    // Read the body of the request as a JSON array of reviews
+    var newReviews = await request.ReadFromJsonAsync<List<Review>>();
+    if (newReviews == null || newReviews.Count == 0)
+    {
+        return Results.BadRequest("No reviews provided.");
+    }
+
+    // You can use the `restaurantId` directly now in the query
+    var restaurant = await restaurantsCollection.Find(r => r.Id == restaurantId).FirstOrDefaultAsync();
+    if (restaurant == null)
+    {
+        return Results.NotFound("Restaurant not found.");
+    }
+
+    // Generate new IDs and add the restaurantId to the reviews
+    foreach (var review in newReviews)
+    {
+        review.Id = ObjectId.GenerateNewId().ToString();
+        review.RestaurantId = restaurantId;
+    }
+
+    // Insert the reviews
+    await reviewCollection.InsertManyAsync(newReviews);
+
+    // Append the new reviews to the embedded list in the restaurant
+    restaurant.Reviews ??= new List<Review>();
+    restaurant.Reviews.AddRange(newReviews);
+
+    // Recalculate the average rating
+    restaurant.AverageRating = (int)Math.Round(restaurant.Reviews.Average(r => r.Calificación));
+
+    // Prepare to update the restaurant document in bulk
+    var updateModel = new ReplaceOneModel<Restaurant>(
+        Builders<Restaurant>.Filter.Eq("Id", restaurantId),
+        restaurant
+    );
+
+    var result = await restaurantsCollection.BulkWriteAsync(new[] { updateModel });
+
+    return Results.Ok(new
+    {
+        success = result.ModifiedCount > 0,
+        newAverageRating = restaurant.AverageRating,
+        reviews = newReviews
+    });
+});
+
+//BULK WRITE PARA AGREGAR PRODUCTOS A LA COLECCIÓN Productos
+app.MapPost("/products/", async (HttpRequest request) =>
+{
+    var products = await request.ReadFromJsonAsync<List<MenuItem>>();
+    if (products == null || products.Count == 0)
+    {
+        return Results.BadRequest("No products provided.");
+    }
+
+    // Assign ObjectIds and create InsertOneModel for each product
+    var writeModels = new List<WriteModel<MenuItem>>();
+    foreach (var product in products)
+    {
+        product.Id = ObjectId.GenerateNewId().ToString();
+        writeModels.Add(new InsertOneModel<MenuItem>(product));
+    }
+
+    await productsCollection.BulkWriteAsync(writeModels);
+
+    return Results.Ok(new
+    {
+        inserted = products.Count,
+        products
+    });
+});
+
+
+
 
 // Crear un Restaurante
 app.MapPost("/restaurants", async (Restaurant newRestaurant) => 
@@ -300,5 +385,9 @@ app.MapDelete("/orders/{orderId}", async (string orderId) =>
 
     return Results.Ok($"Order {orderId} successfully deleted.");
 });
+
+
+
+
 
 app.Run();

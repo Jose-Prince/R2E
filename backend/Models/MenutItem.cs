@@ -3,38 +3,38 @@ using MongoDB.Bson.Serialization.Attributes;
 
 public class MenuItem {
   [BsonId]
-  public ObjectId Id { get; set; }
+  public string Id { get; set; }
 
-  [BsonElement("name")]
-  public string Name { get; set; }
+  [BsonElement("Nombre")]
+  public required string Name { get; set; }
 
-  [BsonElement("basePrice")]
+  [BsonElement("Precio_Base")]
   public double BasePrice { get; set; }
 
-  [BsonElement("totalPrice")]
+  [BsonElement("Precio_Total")]
   public double TotalPrice { get; set; }
 
-  [BsonElement("ingredients")]
-  public List<string> Ingredients { get; set; }
+  [BsonElement("Ingredientes")]
+  public List<string>? Ingredients { get; set; }
 
-  [BsonElement("rating")]
+  [BsonElement("Calificación")]
   public int Rating { get; set; }
 
-  [BsonElement("description")]
-  public string Description { get; set; }
+  [BsonElement("Descripción")]
+  public string? Description { get; set; }
 
-  [BsonElement("discount")]
+  [BsonElement("Descuento")]
   public double Discount { get; set; }
 
-  [BsonElement("inSeason")]
+  [BsonElement("Temporada")]
   public bool InSeason { get; set; }
 
-  [BsonElement("photoItemId"), BsonRepresentation(BsonType.ObjectId)]
-  public string PhotoItemId { get; set; }
+  [BsonElement("Foto_articulo")]
+  public string? PhotoItemId { get; set; }
 
-  [BsonElement("type")]
-  public string Type { get; set; }
+  [BsonElement("Tipo")]
+  public string? Type { get; set; }
 
-  [BsonElement("restaurantId"), BsonRepresentation(BsonType.ObjectId)]
-  public string RestaurantId { get; set; }
+  [BsonElement("Restaurante") ]
+  public required string RestaurantId { get; set; }
 }

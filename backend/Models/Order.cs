@@ -5,7 +5,7 @@ using MongoDB.Bson.Serialization.Attributes;
 public class Order
 {
     [BsonId]
-    public ObjectId Id { get; set; }
+    public required string Id { get; set; }
 
     [BsonElement("No_orden")]
     public int NoOrden { get; set; }
@@ -17,14 +17,14 @@ public class Order
     public double TotalAPagar { get; set; }
 
     [BsonElement("Carrito"), BsonRepresentation(BsonType.ObjectId)]
-    public List<string> Carrito { get; set; }
+    public required List<string> Carrito { get; set; }
 
     [BsonElement("Estado")]
     public int Estado { get; set; }
 
     [BsonElement("Cliente"), BsonRepresentation(BsonType.ObjectId)]
-    public string ClienteId { get; set; }
+    public required string ClienteId { get; set; }
 
     [BsonElement("Notas")]
-    public string Notas { get; set; }
+    public string? Notas { get; set; }
 }
