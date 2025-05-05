@@ -49,7 +49,7 @@ app.MapPost("/orders", async (Order request) =>
         Timestamp = DateTime.UtcNow,
         TotalAPagar = request.TotalAPagar,
         Carrito = request.Carrito,
-        Estado = 0,
+        Estado = 1,
         ClienteId = request.ClienteId,
         Notas = string.Empty // Puedes cambiarlo si deseas un valor por defecto distinto
     };
