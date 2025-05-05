@@ -95,12 +95,11 @@
 <script setup>
 import { useRoute } from 'vue-router';
 import { ref, onMounted } from 'vue';
-import { getStyles, getRestaurants, getSales } from '../controller/controller.js';
+import { getRestaurants, getSales } from '../controller/controller.js';
 
 const route = useRoute();
 const routeQuery = ref('');
 
-const styles = ref([]);
 const selectedStyles = ref([]);
 const restaurants = ref([]);
 const sales = ref([]);

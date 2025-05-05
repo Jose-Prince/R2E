@@ -109,3 +109,26 @@ export async function getRestaurants() {
     throw error;
   }
 }
+
+export async function createOrder(newOrder) {
+  try {
+    const response = await fetch('http://localhost:5125/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newOrder),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Error creating order:', error);
+      throw new Error(`Error creating order: ${response.status} - ${JSON.stringify(error)}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating order:', error);
+    throw error;
+  }
+}
