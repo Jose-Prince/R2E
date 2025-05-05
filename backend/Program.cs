@@ -39,8 +39,20 @@ app.MapGet("/", () => "Hello World!");
 //ENDPOINTS:
 //CREATE:
 //- Crear un pedido
-app.MapPost("/orders", async (Order newOrder) =>
+app.MapPost("/orders", async (Order request) =>
 {
+    var newOrder = new Order
+    {
+        Id = ObjectId.GenerateNewId().ToString(),
+        NoOrden = new Random().Next(100000, 999999), // Puedes ajustar cómo generas el número de orden
+        Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+        TotalAPagar = request.TotalAPagar,
+        Carrito = request.Carrito,
+        Estado = 0,
+        ClienteId = request.ClienteId,
+        Notas = string.Empty // Puedes cambiarlo si deseas un valor por defecto distinto
+    };
+
     await ordersCollection.InsertOneAsync(newOrder);
     return Results.Created($"/orders/{newOrder.Id}", newOrder);
 });
