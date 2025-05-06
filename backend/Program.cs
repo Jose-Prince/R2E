@@ -216,10 +216,28 @@ app.MapGet("/user/{id}", async (string id) =>
     return Results.Ok(user);
 });
 
-
+//- Obtener reviews
 app.MapGet("/reviews", async () =>
 {
     var reviews = await reviewCollection.Find(_ => true).ToListAsync();
+    return Results.Ok(reviews);
+});
+
+//- Obtener reviews por Restaurante
+app.MapGet("/reviews/restaurant/{restaurantId}", async (string restaurantId) =>
+{
+    if (string.IsNullOrEmpty(restaurantId))
+    {
+        return Results.BadRequest("Missing restaurantId.");
+    }
+
+    var reviews = await reviewCollection.Find(r => r.RestaurantId == restaurantId).ToListAsync();
+
+    if (reviews == null || reviews.Count == 0)
+    {
+        return Results.NotFound($"No reviews found for restaurant with id {restaurantId}.");
+    }
+
     return Results.Ok(reviews);
 });
 
