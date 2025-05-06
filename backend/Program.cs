@@ -520,8 +520,33 @@ app.MapDelete("/orders/{orderId}", async (string orderId) =>
     return Results.Ok($"Order {orderId} successfully deleted.");
 });
 
+//- Eliminar productos para un restaurante
+app.MapDelete("/products/by-restaurant/{restaurantId}", async (string restaurantId, HttpRequest request) =>
+{
+    int limit = int.TryParse(request.Query["limit"], out var parsedLimit) && parsedLimit > 0
+                ? parsedLimit
+                : 1;
 
+    var filter = Builders<MenuItem>.Filter.Eq(p => p.RestaurantId, restaurantId);
 
+    var productsToDelete = await productsCollection
+        .Find(filter)
+        .Limit(limit)
+        .ToListAsync();
 
+    if (productsToDelete.Count == 0)
+        return Results.NotFound("No se encontraron productos para eliminar.");
+
+    var idsToDelete = productsToDelete.Select(p => p.Id).ToList();
+
+    var deleteFilter = Builders<MenuItem>.Filter.In(p => p.Id, idsToDelete);
+    var result = await productsCollection.DeleteManyAsync(deleteFilter);
+
+    return Results.Ok(new
+    {
+        Eliminados = result.DeletedCount,
+        ProductosEliminados = idsToDelete
+    });
+});
 
 app.Run();
