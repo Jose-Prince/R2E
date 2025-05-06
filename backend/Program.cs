@@ -189,10 +189,19 @@ app.MapPost("/restaurants", async (Restaurant newRestaurant) =>
 });
 
 //READ:
-// Obtener lista de restaurantes
-app.MapGet("/restaurants",async () => 
+//- Obtener restaurantes en base a un tamaño y página (tamaño y página opcionales)
+app.MapGet("/restaurants", async (HttpRequest request) =>
 {
-    var restaurants = await restaurantsCollection.Find(_ => true).ToListAsync();
+    int page = int.TryParse(request.Query["page"], out var p) && p > 0 ? p : 1;
+    int size = int.TryParse(request.Query["size"], out var s) && s > 0 ? s : 10;
+
+    var skip = (page - 1) * size;
+
+    var restaurants = await restaurantsCollection
+        .Find(_ => true)
+        .Skip(skip)
+        .Limit(size)
+        .ToListAsync();
 
     return Results.Ok(restaurants);
 });
