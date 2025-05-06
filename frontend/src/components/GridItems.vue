@@ -7,6 +7,7 @@
         </v-card-title>
         <v-card-text>
           <div v-if="selectedRestaurant">
+            <div v-for="review in reviews">{{}}</div>
             <div><strong>Location:</strong> {{ selectedRestaurant.location }}</div>
             <div><strong>Rating:</strong> {{ selectedRestaurant.averageRating }}</div>
             <div>
@@ -23,9 +24,18 @@
                 {{ style }}
               </v-chip>
             </div>
-            </div>
+
+            <v-text-field
+              v-model="dialogTextFieldValue"
+              label="Enter Value"
+              class="mt-4"
+            ></v-text-field>
+          </div>
         </v-card-text>
         <v-card-actions class="justify-end">
+          <v-btn color="secondary" class="mr-2" @click="handleDialogInputValue">
+            Handle Value
+          </v-btn>
           <v-btn color="primary" @click="dialog = false">Close</v-btn>
         </v-card-actions>
       </v-card>
@@ -102,9 +112,6 @@
               </div>
             </v-card-text>
             <v-card-actions>
-              <v-btn @click="openRestaurantDetails(restaurant)">
-                View Reviews
-              </v-btn>
             </v-card-actions>
           </v-card>
         </v-col>
@@ -130,23 +137,24 @@
 
 <script setup>
 import { useRoute } from 'vue-router';
-import { ref, onMounted } from 'vue';
-import { getRestaurants, getSales } from '../controller/controller.js';
+import { ref, onMounted, watch } from 'vue'; // Importa 'watch' si aún no lo tienes
+import { getRestaurants, getSales, getReviewsByRestaurant } from '../controller/controller.js';
 
 const route = useRoute();
 const routeQuery = ref('');
 
 const dialog = ref(false);
+const dialogTextFieldValue = ref(''); // Ref para el valor del text field
 const selectedRestaurant = ref(null);
 const selectedStyles = ref([]);
 const restaurants = ref([]);
 const sales = ref([]);
 const cart = ref([]);
+const reviews = ref([]) // Ref para almacenar las reseñas del restaurante
 
 onMounted(async () => {
   routeQuery.value = route.query.page;
   loadCart(); // Cargar el carrito al montar el componente
-
   try {
     if (routeQuery.value === 'restaurants') {
       restaurants.value = await getRestaurants();
@@ -157,15 +165,6 @@ onMounted(async () => {
     console.error('Error al obtener datos:', err);
   }
 });
-
-function toggleStyle(style) {
-  const index = selectedStyles.value.indexOf(style);
-  if (index === -1) {
-    selectedStyles.value.push(style);
-  } else {
-    selectedStyles.value.splice(index, 1);
-  }
-}
 
 function addToCart(product) {
   cart.value.push(product);
@@ -183,9 +182,31 @@ function loadCart() {
   }
 }
 
-function openRestaurantDetails(restaurant) {
+async function openRestaurantDetails(restaurant) {
   selectedRestaurant.value = restaurant;
+  dialogTextFieldValue.value = ''; // Resetear el valor del text field al abrir el diálogo
+  reviews.value = []; // Limpiar las reseñas anteriores
+
+  // Llamar a la función para obtener las reseñas del restaurante seleccionado
+  if (selectedRestaurant.value?.id) {
+    try {
+      console.log(selectedRestaurant.value.id)
+      const fetchedReviews = await getReviewsByRestaurant(selectedRestaurant.value.id);
+      reviews.value = fetchedReviews;
+      console.log('Reseñas del restaurante:', reviews.value);
+    } catch (error) {
+      console.error('Error al obtener las reseñas del restaurante:', error);
+      // Manejar el error (mostrar un mensaje al usuario, etc.)
+    }
+  }
+
   dialog.value = true;
+}
+
+function handleDialogInputValue() {
+  // Aquí puedes manejar el valor del text field (dialogTextFieldValue.value)
+  console.log('Valor del text field:', dialogTextFieldValue.value);
+  // Por ejemplo, podrías enviar este valor a una función, actualizar otra ref, etc.
 }
 </script>
 
@@ -214,3 +235,4 @@ function openRestaurantDetails(restaurant) {
   border-color: #1976d2;
 }
 </style>
+

@@ -177,3 +177,55 @@ export async function updateOrderStatus(orderId, newState) {
     throw error;
   }
 }
+
+export async function addRestaurantReviews(restaurantId, reviews) {
+  try {
+    const url = `http://localhost:5125/reviews/${restaurantId}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(reviews),
+    });
+
+    if (!response.ok) {
+      let errorMessage = `Error adding reviews: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage += ` - ${errorData.message || 'Unknown error'}`;
+      } catch (jsonError) {
+        // If JSON parsing fails, just use the basic error message
+      }
+      if (response.status === 400) {
+        throw new Error(errorMessage);
+      } else if (response.status === 404) {
+        throw new Error(errorMessage);
+      } else {
+        throw new Error(errorMessage);
+      }
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error adding reviews for restaurant ${restaurantId}:`, error);
+    throw error;
+  }
+}
+
+export async function getReviewsByRestaurant(id) {
+  try {
+    const response = fetch(`http://localhost:5125/reviews/restaurant/${id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Error getting orders: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error(`Error getting reviews`, error)
+  }
+}
