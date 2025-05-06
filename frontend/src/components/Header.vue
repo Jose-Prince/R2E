@@ -31,6 +31,11 @@
           title="Profile"
           @click="updateParams('profile')"
         ></v-list-item>
+        <v-list-item
+          prepend-icon="mdi-security"
+          title="Admin"
+          @click="updateParams('admin')"
+        ></v-list-item>
 
       </v-list>
       </v-navigation-drawer>

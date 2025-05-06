@@ -18,6 +18,9 @@
     <div v-else-if="page == 'cart'">
       <Cart />
     </div>
+    <div v-else-if="page == 'admin'">
+      <Admin></Admin>
+    </div>
     <div v-else>
       No carga
     </div>

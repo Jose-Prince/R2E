@@ -73,6 +73,31 @@ app.MapPost("/upload", async (HttpRequest request) =>
 });
 
 
+app.MapGet("/file/{id}", async (string id) =>
+{
+    if (!ObjectId.TryParse(id, out var objectId))
+        return Results.BadRequest("Invalid file ID.");
+
+    try
+    {
+        var stream = await gridFS.OpenDownloadStreamAsync(objectId);
+        var contentType = "application/octet-stream";
+
+        // Optional: try to infer content type from filename
+        if (stream.FileInfo.Filename.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
+            contentType = "image/jpeg";
+        else if (stream.FileInfo.Filename.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+            contentType = "image/png";
+
+        return Results.File(stream, contentType, stream.FileInfo.Filename);
+    }
+    catch (GridFSFileNotFoundException)
+    {
+        return Results.NotFound("File not found in GridFS.");
+    }
+});
+
+
 
 // Utiliza Bulkwrite para insertar un documento a review y por otro lado utiliza un update para arreglar la Calificación del restaurante
 app.MapPost("/reviews/{restaurantId}", async (string restaurantId, HttpRequest request) =>
