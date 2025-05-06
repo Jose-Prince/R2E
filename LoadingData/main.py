@@ -34,7 +34,7 @@ def random_card():
 
 # Generate 50 random users
 data = []
-for _ in range(50):
+for _ in range(50000):
     user = {
         "_id": str(ObjectId()),
         'Nombre_y_Apellido': fake.name(),
@@ -48,7 +48,7 @@ for _ in range(50):
 df = pd.DataFrame(data)
 
 
-# df.to_json('users.json', orient='records', indent=4, date_format='iso')
+df.to_json('users.json', orient='records', indent=4, date_format='iso')
 
 
 
@@ -140,7 +140,7 @@ items = [random_item() for _ in range(50)]
 df = pd.DataFrame(items)
 
 # Save to JSON
-df.to_json('products.json', orient='records', indent=4, force_ascii=False)
+# df.to_json('products.json', orient='records', indent=4, force_ascii=False)
 
 
 users_collection = db['Users']
@@ -190,7 +190,7 @@ for i in range(1, 51):  # 50 orders
 df = pd.DataFrame(data)
 
 # Save to JSON
-df.to_json('ordenes.json', orient='records', indent=4, force_ascii=False, )
+# df.to_json('ordenes.json', orient='records', indent=4, force_ascii=False, )
 
 
 
@@ -210,4 +210,4 @@ for _ in range(100):  # let's create 100 reviews
 reseñas_df = pd.DataFrame(reseñas_data)
 
 # Save to JSON
-reseñas_df.to_json('review.json', orient='records', indent=4, force_ascii=False)
+# reseñas_df.to_json('review.json', orient='records', indent=4, force_ascii=False)

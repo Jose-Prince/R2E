@@ -14,10 +14,10 @@ public class Restaurant {
     [BsonElement("direccion")]
     public string Location { get; set; }
 
-    [BsonElement("Foto_ubicación"), BsonRepresentation(BsonType.ObjectId)]
+    [BsonElement("Foto_ubicación")]
     public string PhotoLocationId { get; set; }
 
-    [BsonElement("Foto_referencia"), BsonRepresentation(BsonType.ObjectId)]
+    [BsonElement("Foto_referencia")]
     public string PhotoReferenceId { get; set; }
 
     [BsonElement("Estilo")]

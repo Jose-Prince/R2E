@@ -1,4 +1,5 @@
 using DotNetEnv;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
@@ -335,6 +336,53 @@ app.MapGet("/orders", async (HttpRequest request) =>
     return Results.Ok(orders);
 });
 
+
+//  To get la cuenta de los estados ordenados
+app.MapGet("/orders/count/{estado:int}", async (int estado) =>
+{
+    var pipeline = new BsonDocument[]
+    {
+        new BsonDocument("$match", new BsonDocument("Estado", estado)),
+        new BsonDocument("$count", "Count")
+    };
+
+    var result = await ordersCollection.AggregateAsync<BsonDocument>(pipeline);
+    var document = await result.FirstOrDefaultAsync();
+
+    var count = document?["Count"].AsInt32 ?? 0;
+
+    return Results.Ok(new { Estado = estado, Count = count });
+});
+
+
+
+// To get los ingredientes y que sean unicos.
+app.MapGet("/products/ingredients", async () =>
+{
+    var pipeline = new BsonDocument[]
+    {
+        new BsonDocument("$unwind", "$Ingredientes"),
+        new BsonDocument("$group", new BsonDocument
+        {
+            { "_id", BsonNull.Value },
+            { "allIngredientes", new BsonDocument("$addToSet", "$Ingredientes") } // Collect unique ingredients
+        }),
+        new BsonDocument("$project", new BsonDocument
+        {
+            { "ingredientes_", "$allIngredientes" }, // Rename 'allIngredientes' to 'ingredientes_'
+            { "_id", 0 } // Exclude _id from the final result
+        })
+    };
+
+    var result = await productsCollection.AggregateAsync<BsonDocument>(pipeline);
+    var document = await result.FirstOrDefaultAsync();
+
+    var ingredientes = document?["ingredientes_"].AsBsonArray.Select(x => x.AsString).ToList() ?? new List<string>();
+
+    return Results.Ok(new { Ingredientes = ingredientes });
+});
+
+
 //UPDATE:
 //- Actualizar restaurante
 app.MapPatch("/restaurants/{name}", async (string name, Restaurant updatedRestaurant) => 
@@ -390,7 +438,34 @@ app.MapPatch("/user/{userId}/card", async (string userId, Card nuevaTarjeta) =>
     return Results.Ok($"Card updated for user {userId}.");
 });
 
-//- Añadir artículo a carrito (actualizar el total a pagar)
+//- Eliminar artículo a carrito (actualizar el total a pagar)
+app.MapDelete("/user/{userId}", async (string userId) =>
+{
+    var filter = Builders<User>.Filter.Eq("_id", userId);
+    var result = await usersCollection.DeleteOneAsync(filter);
+
+    if (result.DeletedCount == 0)
+        return Results.NotFound($"User with id {userId} not found.");
+
+    return Results.Ok($"User with id {userId} deleted.");
+});
+
+
+//- Eliminar USUARIOS
+
+app.MapDelete("/users/batch", async (HttpRequest request) =>
+{
+    var userIds = await request.ReadFromJsonAsync<List<string>>();
+    if (userIds == null || userIds.Count == 0)
+        return Results.BadRequest("No user IDs provided.");
+
+    // Filter to match the user IDs as strings
+    var filter = Builders<User>.Filter.In("_id", userIds);
+
+    var result = await usersCollection.DeleteManyAsync(filter);
+
+    return Results.Ok($"{result.DeletedCount} users deleted.");
+});
 
 
 // Cambiar estado de una orden
@@ -407,19 +482,56 @@ app.MapPatch("/orders/{orderId}/status", async (string orderId, EstadoWrapper bo
     return Results.Ok($"Estado de la orden {orderId} actualizado a {body.Estado}.");
 });
 
-app.MapPatch("/review/{reviewId}", async (string reviewId, Review update) =>
+    app.MapPatch("/review/{reviewId}", async (string reviewId, Review update) =>
+    {
+        var filter = Builders<Review>.Filter.Eq("_id", ObjectId.Parse(reviewId));
+        var updateDef = Builders<Review>.Update
+            .Set("Calificación", update.Calificación)
+            .Set("Comentario", update.Comentario);
+        var result = await reviewCollection.UpdateOneAsync(filter, updateDef);
+
+        if (result.MatchedCount == 0)
+            return Results.NotFound($"Review with id {reviewId} not found.");
+
+        return Results.Ok($"Review {reviewId} updated with new Calificación and Comentario.");
+    });
+
+app.MapPatch("/reviews", async ([FromBody] List<Review> reviews) =>
 {
-    var filter = Builders<Review>.Filter.Eq("_id", ObjectId.Parse(reviewId));
-    var updateDef = Builders<Review>.Update
-        .Set("Calificación", update.Calificación)
-        .Set("Comentario", update.Comentario);
-    var result = await reviewCollection.UpdateOneAsync(filter, updateDef);
+    // Check if the body is null or empty
+    if (reviews == null || !reviews.Any())
+    {
+        return Results.BadRequest("Invalid input. Please provide a list of reviews.");
+    }
 
-    if (result.MatchedCount == 0)
-        return Results.NotFound($"Review with id {reviewId} not found.");
+    var updateRequests = new List<WriteModel<Review>>();
 
-    return Results.Ok($"Review {reviewId} updated with new Calificación and Comentario.");
+    // Iterate through the list of reviews to prepare the bulk write
+    foreach (var review in reviews)
+    {
+        if (string.IsNullOrEmpty(review.Id))
+            continue; // Skip invalid or missing IDs
+
+        var filter = Builders<Review>.Filter.Eq(r => r.Id, review.Id);
+
+        var updateDef = Builders<Review>.Update
+            .Set(r => r.Calificación, review.Calificación)
+            .Set(r => r.Comentario, review.Comentario);
+
+        updateRequests.Add(new UpdateOneModel<Review>(filter, updateDef));
+    }
+
+    // If no valid reviews to update
+    if (!updateRequests.Any())
+        return Results.BadRequest("No valid reviews to update.");
+
+    // Perform the bulk update operation
+    var result = await reviewCollection.BulkWriteAsync(updateRequests);
+
+    // Return the result
+    return Results.Ok($"{result.ModifiedCount} reviews updated.");
 });
+
 
 
 
@@ -482,6 +594,21 @@ app.MapDelete("review/{id}", async (string id) =>
 });
 
 
+// Elimina múltiples reviews
+app.MapDelete("reviews", async ( [FromBody] List<string> ids) =>
+{
+    // Create a filter to match documents where the 'Id' field is in the list of ids
+    var filter = Builders<Review>.Filter.In(r => r.Id, ids);
+
+    // Perform the delete operation
+    var result = await reviewCollection.DeleteManyAsync(filter);
+
+    if (result.DeletedCount == 0)
+        return Results.NotFound("No reviews found to delete.");
+
+    return Results.Ok($"{result.DeletedCount} reviews deleted.");
+});
+// ["6810073f6aa7cd474293f35e", "6810073f6aa7cd474293f36f"]
 
 
 //- Quitar tarjeta
@@ -498,6 +625,8 @@ app.MapDelete("user/{userId}/card", async (string userId) =>
     return Results.Ok($"Card deleted for user {userId}.");
 });
 
+
+
 //- Eliminar una orden
 app.MapDelete("/orders/{orderId}", async (string orderId) =>
 {
@@ -510,8 +639,21 @@ app.MapDelete("/orders/{orderId}", async (string orderId) =>
 
     return Results.Ok($"Order {orderId} successfully deleted.");
 });
+//Eliminar Varios ordenes
+app.MapDelete("/orders/batch", async (HttpRequest request) =>
+{
+    var orderIds = await request.ReadFromJsonAsync<List<string>>();
+    if (orderIds == null || orderIds.Count == 0)
+        return Results.BadRequest("No order IDs provided.");
 
+    var filter = Builders<Order>.Filter.In("_id", orderIds);
+    var result = await ordersCollection.DeleteManyAsync(filter);
 
+    if (result.DeletedCount == 0)
+        return Results.NotFound("No matching orders found to delete.");
+
+    return Results.Ok($"{result.DeletedCount} orders successfully deleted.");
+});
 
 
 
