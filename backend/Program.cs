@@ -185,6 +185,7 @@ app.MapPost("/products/", async (HttpRequest request) =>
 // Crear un Restaurante
 app.MapPost("/restaurants", async (Restaurant newRestaurant) => 
 {
+    newRestaurant.Id = Guid.NewGuid().ToString();
     await restaurantsCollection.InsertOneAsync(newRestaurant);
     return Results.Created($"/restaurants/{newRestaurant.Id}", newRestaurant);
 });
